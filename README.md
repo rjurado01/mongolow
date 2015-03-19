@@ -33,6 +33,10 @@ end
 * set(field_name, field_value)
 * destroy
 
+### Example
+
+You can see complete example [here](https://github.com/rjurado01/mongolow/blob/master/spec/example_spec.rb).
+
 ## Validations
 
 All Mongolow models have `_errors` field by default to store errors.  

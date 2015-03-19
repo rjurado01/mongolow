@@ -14,11 +14,22 @@ describe "Model inheritance example" do
 
       field :name
       field :age
+      field :email
+
+      def before_save
+        self.age = '23' unless self.age
+      end
+
+      def validate
+        self._errors = {}
+        self._errors['email'] = 'black' unless self.email
+        self._errors.empty?
+      end
     end
 
     # check new
-    person1 = Person.new({name: 'p1', age: '25'})
-    person2 = Person.new({name: 'p2'})
+    person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})
+    person2 = Person.new({name: 'p2', email: 'email2@email.com'})
     person1.save
     person2.save
 
@@ -28,7 +39,7 @@ describe "Model inheritance example" do
     db_persons[0]['name'].should == 'p1'
     db_persons[0]['age'].should == '25'
     db_persons[1]['name'].should == 'p2'
-    db_persons[1]['age'].should == nil
+    db_persons[1]['age'].should == '23'
 
     # check update
     person2.age = '26'
@@ -45,5 +56,11 @@ describe "Model inheritance example" do
     person1.destroy
     person2.destroy
     db_persons = @session['person'].find().count.should == 0
+
+    # check validation
+    person1 = Person.new({name: 'p1'})
+    person1.save
+    @session['person'].count.should == 0
+    person1._errors.should == {'email' => 'black'}
   end
 end
