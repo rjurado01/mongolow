@@ -9,7 +9,9 @@ describe "Model inheritance example" do
   it "everithing works fine" do
     @session['person'].drop
 
-    class Person < Mongolow::Model
+    class Person
+      include Mongolow::Model
+
       field :name
       field :age
     end

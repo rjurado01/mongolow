@@ -1,8 +1,8 @@
 # encoding: utf-8
 
 module Mongolow
-  class Model
-    class << self
+  module Model
+    module ClassMethods
       ##
       # Returns model fields
       # When new initialize is created new instance variable is added for each field
@@ -65,9 +65,12 @@ module Mongolow
       end
     end
 
-    private_class_method :field
-
-    attr_accessor :_id
+    ##
+    # Add class methods
+    #
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
 
     ##
     # Adds instance variables and initializes its
