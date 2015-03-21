@@ -13,7 +13,7 @@ Mongolow uses [mongo-ruby-driver](https://github.com/mongodb/mongo-ruby-driver) 
 ```ruby
 class Person
   import Mongolow::Model
-  
+
   field :name
   field :email
 end
@@ -23,9 +23,11 @@ end
 
 * new(hash_initial_values)
 * find(query)
+* find_by_id(id)
 * count
-* first
+* first(query)
 * destroy_all
+* destroy_by_id(id)
 
 ### Instance Methods
 
@@ -45,9 +47,9 @@ You can define your own validations using method validate.
 ```ruby
 class Person
   import Mongolow::Model
-  
+
   field :name
-  
+
   def validate
     self._errors = {}
     self._errors['name'] = 'blank' unless self.name
@@ -80,9 +82,9 @@ You can define this callbacks in your model:
 ```ruby
 class Person
   import Mongolow::Model
-  
+
   field :name
-  
+
   def before_save
     self.name = 'My name'
   end

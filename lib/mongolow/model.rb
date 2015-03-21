@@ -44,6 +44,23 @@ module Mongolow
       end
 
       ##
+      # Find model by id
+      #
+      # @param: id [string/BSON::ObjectId]
+      #
+      def find_by_id(id)
+        unless id.class == BSON::ObjectId
+          if BSON::ObjectId.legal? id
+            id = BSON::ObjectId.from_string(id)
+          else
+            return nil
+          end
+        end
+
+        find('_id' => id).first
+      end
+
+      ##
       # Returns the number of documents
       #
       def count
@@ -53,8 +70,10 @@ module Mongolow
       ##
       # Returns the first document
       #
-      def first
-        return self.new(Driver.session[coll_name].find_one)
+      # @param: query [hash]
+      #
+      def first(query={})
+        return self.new(Driver.session[coll_name].find_one(query))
       end
 
       ##
@@ -62,6 +81,29 @@ module Mongolow
       #
       def destroy_all
         Driver.session[coll_name].remove
+      end
+
+      ##
+      # Removes model
+      # Returns true if model is removed, false otherwise
+      #
+      # @param: id [string/BSON::ObjectId]
+      #
+      def destroy_by_id(id)
+        unless id.class == BSON::ObjectId
+          if BSON::ObjectId.legal? id
+            id = BSON::ObjectId.from_string(id)
+          else
+            return false
+          end
+        end
+
+        if model = find('_id' => id).first
+          model.destroy
+          return true
+        else
+          return false
+        end
       end
     end
 

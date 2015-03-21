@@ -43,11 +43,35 @@ describe "MyModel" do
       end
     end
 
+    describe "find_by_id" do
+      it "return model instance" do
+        id_1 = @session['my_model'].insert({name: 'name1'})
+        id_2 = @session['my_model'].insert({name: 'name2'})
+
+        MyModel.find_by_id('invalid').should == nil
+        MyModel.find_by_id(id_2.to_s).name.should == 'name2'
+        MyModel.find_by_id(id_2).name.should == 'name2'
+      end
+    end
+
     describe "destroy_all" do
       it "remove all documents" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
         MyModel.destroy_all
+        @session['my_model'].count.should == 0
+      end
+    end
+
+    describe "destroy_by_id" do
+      it "return model instance" do
+        id_1 = @session['my_model'].insert({name: 'name1'})
+        id_2 = @session['my_model'].insert({name: 'name2'})
+
+        MyModel.destroy_by_id('invalid').should == false
+        MyModel.destroy_by_id(id_2.to_s).should == true
+        @session['my_model'].count.should == 1
+        MyModel.destroy_by_id(id_1).should == true
         @session['my_model'].count.should == 0
       end
     end
@@ -66,6 +90,8 @@ describe "MyModel" do
         id_2 = @session['my_model'].insert({name: 'name2'})
         MyModel.first._id.should == id_1
         MyModel.first.class.should == MyModel
+        MyModel.first(name: 'name2')._id.should == id_2
+        MyModel.first({name: 'name2'})._id.should == id_2
       end
     end
   end
