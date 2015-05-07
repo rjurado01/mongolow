@@ -17,5 +17,6 @@ Gem::Specification.new do |gem|
   gem.test_files = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
   gem.add_dependency "mongo"
-  gem.add_development_dependency "rspec-rails"
+  gem.add_dependency "bson_ext"
+  gem.add_development_dependency "rspec"
 end
