@@ -34,6 +34,7 @@ end
 * save
 * set(field_name, field_value)
 * destroy
+* template
 
 ### Example
 
@@ -89,4 +90,46 @@ class Person
     self.name = 'My name'
   end
 end
+```
+
+## Templates
+
+You can use `template` method for get model hash representation.  
+You can also define your own template methods and call its with `template`.
+
+```ruby
+class Post
+  import Mongolow::Model
+
+  field :title
+  field :text
+
+  def custom_template(options)
+    return {
+        id: self._id.to_s
+        title: self.title,
+        text: self.text,
+        author: options['author']
+    }
+  end
+end
+
+p = Post.new({title: 'Title1', 'text' => 'Example text 1.'})
+p.save
+p.template
+# {
+#   "_id": {
+#     "$oid": "55539336ab8bae1fdb000001"
+#   },
+#   "title": "Title1",
+#   "text": "Example text 1."
+# }
+
+p.template('custom_template', {'author' => 'John'})
+# {
+#   "id": "55539336ab8bae1fdb000001",
+#   "title": "Title1",
+#   "text": "Example text 1.",
+#   "author": "John"
+# }
 ```
