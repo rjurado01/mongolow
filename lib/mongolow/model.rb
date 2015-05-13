@@ -183,6 +183,27 @@ module Mongolow
       after_destroy
     end
 
+    ##
+    # Returns hash representation
+    # Can receive the name of other method to returns template
+    #
+    # @param: name [string] instance method to be called
+    # @param: options [hash] options used in 'name', method
+    #
+    def template(name=nil, options=nil)
+      if name and self.respond_to? name
+        self.send(name, options)
+      else
+        hash = {}
+
+        self.instance_variables.each do |name|
+          hash[name.to_s.delete('@')] = self.instance_variable_get(name)
+        end
+
+        return hash
+      end
+    end
+
     private
 
     def validate

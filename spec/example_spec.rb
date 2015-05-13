@@ -62,5 +62,10 @@ describe "Model inheritance example" do
     person1.save
     @session['person'].count.should == 0
     person1._errors.should == {'email' => 'black'}
+
+    # check template
+    person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})
+    person1.template.should ==
+      {'name' => 'p1', 'age' => '25', 'email' => 'email1@email.com'}
   end
 end

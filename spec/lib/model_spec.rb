@@ -174,5 +174,29 @@ describe "MyModel" do
         @session['my_model'].find().count.should == 0
       end
     end
+
+    describe "template" do
+      it "return all fields" do
+        class MyModel
+          include Mongolow::Model
+
+          field :name
+          field :email
+
+          def custom_template(options)
+            return {
+              'custom_name' => self.name,
+              'custom_email' => self.email,
+              'role' => options[:role]
+            }
+          end
+        end
+
+        instance = MyModel.new({name: 'm1', email: 'm1@email.com'})
+        instance.template.should == {'name' => 'm1', 'email' => 'm1@email.com'}
+        instance.template('custom_template', {role: 'admin'}).should ==
+          {'custom_name' => 'm1', 'custom_email' => 'm1@email.com', 'role' => 'admin'}
+      end
+    end
   end
 end
