@@ -19,6 +19,14 @@ class Person
 end
 ```
 
+Mongolow uses the next private fields:
+
+* _id
+* _errors
+* _hooks
+
+**DON'T OVERWRITE !!**
+
 ### Class Methods
 
 * new(hash_initial_values)

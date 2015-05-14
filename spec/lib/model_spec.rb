@@ -113,8 +113,9 @@ describe "MyModel" do
           instance = MyModel.new
           instance.name = 'name1'
 
-          instance.should_receive('before_save')
-          instance.should_receive('after_save')
+          instance.should_receive('run_hook').with(:validate)
+          instance.should_receive('run_hook').with(:before_save)
+          instance.should_receive('run_hook').with(:after_save)
           instance.save
 
           instance._id.should_not == nil
@@ -129,8 +130,9 @@ describe "MyModel" do
           instance = MyModel.find({_id: id_1}).first
           instance.name = 'name1'
 
-          instance.should_receive('before_save')
-          instance.should_receive('after_save')
+          instance.should_receive('run_hook').with(:validate)
+          instance.should_receive('run_hook').with(:before_save)
+          instance.should_receive('run_hook').with(:after_save)
           instance.save
 
           instance._id.should_not == nil
@@ -145,8 +147,9 @@ describe "MyModel" do
           instance = MyModel.find({_id: id_1}).first
           instance._id = '123'
 
-          instance.should_receive('before_save')
-          instance.should_receive('after_save')
+          instance.should_receive('run_hook').with(:validate)
+          instance.should_receive('run_hook').with(:before_save)
+          instance.should_receive('run_hook').with(:after_save)
           instance.save
 
           @session['my_model'].find().count.should == 2
@@ -180,6 +183,28 @@ describe "MyModel" do
         instance = MyModel.new
         instance.save
         instance.id.should == instance._id.to_s
+      end
+    end
+
+    describe "valid?" do
+      it "return true when model is valid" do
+        instance = MyModel.new
+        instance.should_receive('run_hook').with(:validate)
+        instance.valid?.should == true
+      end
+
+      it "return false when model is invalid" do
+        class MyModel2
+          include Mongolow::Model
+
+          validate do
+            self._errors = {'intance' => 'invalid'}
+          end
+        end
+
+        instance = MyModel2.new
+        instance.should_receive('run_hook').with(:validate).and_call_original
+        instance.valid?.should == false
       end
     end
 

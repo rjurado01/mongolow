@@ -1,3 +1,4 @@
+require 'hooks'
 require 'mongo'
 require 'mongolow/version'
 require 'mongolow/driver'

@@ -20,8 +20,6 @@ module Mongolow
       # @param: name [string/symbol] field name
       #
       def field(name)
-        @fields = ['_id', '_errors'] unless @fields
-
         unless @fields.include? name
           @fields.push name.to_s
         end
@@ -108,10 +106,18 @@ module Mongolow
     end
 
     ##
-    # Add class methods
+    # Add class methods and hooks
     #
     def self.included(base)
+      base.instance_variable_set(:@fields, ['_id', '_errors'])
       base.extend(ClassMethods)
+      base.send :include, Hooks
+      base.define_hook :validate
+      base.define_hook :after_initialize
+      base.define_hook :before_save
+      base.define_hook :after_save
+      base.define_hook :before_destroy
+      base.define_hook :after_destroy
     end
 
     ##
@@ -130,21 +136,22 @@ module Mongolow
           self.send("#{field}=", hash[field])
         end
       end
+
+      self.run_hook :after_initialize
     end
 
     ##
     # Validates and writes model in database
     #
     def save
-      before_validate
+      if self.valid?
+        self.run_hook :before_save
 
-      if validate
-        before_save
-
-        document = {}
+        document =  self._id ? {'_id' => self._id} : {}
         # remove '@' from each instance variable name
+        # don't save internal fields ('_xxxx')
         self.instance_variables.map{ |x| x.to_s[1..-1] }.each do |field|
-          document[field] = self.send(field)
+          document[field] = self.send(field) unless field[0] == '_'
         end
 
         if self._id
@@ -154,7 +161,7 @@ module Mongolow
           self._id = Driver.session[self.class.coll_name].insert(document)
         end
 
-        after_save
+        self.run_hook :after_save
       end
     end
 
@@ -176,11 +183,11 @@ module Mongolow
     # Removes document from database
     #
     def destroy
-      before_destroy
+      self.run_hook :before_destroy
 
       Driver.session[self.class.coll_name].remove({'_id' => self._id})
 
-      after_destroy
+      self.run_hook :after_save
     end
 
     ##
@@ -188,6 +195,14 @@ module Mongolow
     #
     def id
       self._id.to_s if self._id
+    end
+
+    ##
+    # Validates and returns if model is valid
+    #
+    def valid?
+      self.run_hook :validate
+      not self._errors or self._errors.empty?
     end
 
     ##
@@ -211,30 +226,6 @@ module Mongolow
 
         return hash
       end
-    end
-
-    private
-
-    def validate
-      true
-    end
-
-    def after_initialize
-    end
-
-    def before_validate
-    end
-
-    def before_save
-    end
-
-    def after_save
-    end
-
-    def before_destroy
-    end
-
-    def after_destroy
     end
   end
 end

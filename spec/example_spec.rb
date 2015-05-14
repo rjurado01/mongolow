@@ -16,11 +16,11 @@ describe "Model inheritance example" do
       field :age
       field :email
 
-      def before_save
+      before_save do
         self.age = '23' unless self.age
       end
 
-      def validate
+      validate do
         self._errors = {}
         self._errors['email'] = 'black' unless self.email
         self._errors.empty?
