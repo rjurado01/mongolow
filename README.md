@@ -51,7 +51,7 @@ You can see complete example [here](https://github.com/rjurado01/mongolow/blob/m
 ## Validations
 
 All Mongolow models have `_errors` field by default to store errors.  
-You can define your own validations using method validate.
+You can define your own validations using validate hook.
 
 ```ruby
 class Person
@@ -59,7 +59,7 @@ class Person
 
   field :name
 
-  def validate
+  validate
     self._errors = {}
     self._errors['name'] = 'blank' unless self.name
     self._errors.empty?
@@ -75,12 +75,11 @@ If validate method returns false, Mongolow don't save the model.
 Mongolow doesn't support relationships management.  
 You can define your own relationships using fields and methods.
 
-## Callbacks
+## Hooks
 
-You can define this callbacks in your model:
+Mongolow uses [hooks](https://github.com/apotonick/hooks) gem. You can use next hooks:
 
 * after_initialize
-* before_validate
 * before_save
 * after_save
 * before_destroy
@@ -94,7 +93,7 @@ class Person
 
   field :name
 
-  def before_save
+  before_save
     self.name = 'My name'
   end
 end
