@@ -184,6 +184,13 @@ module Mongolow
     end
 
     ##
+    # Return mongodb id in string format
+    #
+    def id
+      self._id.to_s if self._id
+    end
+
+    ##
     # Returns hash representation
     # Can receive the name of other method to returns template
     #
@@ -194,10 +201,12 @@ module Mongolow
       if name and self.respond_to? name
         self.send(name, options)
       else
-        hash = {}
+        hash = {'id' => self.id}
 
         self.instance_variables.each do |name|
-          hash[name.to_s.delete('@')] = self.instance_variable_get(name)
+          unless name.to_s.include? '@_'
+            hash[name.to_s.delete('@')] = self.instance_variable_get(name)
+          end
         end
 
         return hash

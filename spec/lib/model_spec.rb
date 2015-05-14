@@ -175,6 +175,14 @@ describe "MyModel" do
       end
     end
 
+    describe "id" do
+      it "return _id field in string format" do
+        instance = MyModel.new
+        instance.save
+        instance.id.should == instance._id.to_s
+      end
+    end
+
     describe "template" do
       it "return all fields" do
         class MyModel
@@ -193,9 +201,18 @@ describe "MyModel" do
         end
 
         instance = MyModel.new({name: 'm1', email: 'm1@email.com'})
-        instance.template.should == {'name' => 'm1', 'email' => 'm1@email.com'}
-        instance.template('custom_template', {role: 'admin'}).should ==
-          {'custom_name' => 'm1', 'custom_email' => 'm1@email.com', 'role' => 'admin'}
+        instance.save
+
+        instance.template.should == {
+          'id' => instance.id,
+          'name' => 'm1',
+          'email' => 'm1@email.com'
+        }
+        instance.template('custom_template', {role: 'admin'}).should == {
+          'custom_name' => 'm1',
+          'custom_email' => 'm1@email.com',
+          'role' => 'admin'
+        }
       end
     end
   end

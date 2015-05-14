@@ -65,7 +65,8 @@ describe "Model inheritance example" do
 
     # check template
     person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})
+    person1.save
     person1.template.should ==
-      {'name' => 'p1', 'age' => '25', 'email' => 'email1@email.com'}
+      {'id' => person1.id, 'name' => 'p1', 'age' => '25', 'email' => 'email1@email.com'}
   end
 end
