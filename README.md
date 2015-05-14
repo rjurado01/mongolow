@@ -12,7 +12,7 @@ Mongolow uses [mongo-ruby-driver](https://github.com/mongodb/mongo-ruby-driver) 
 
 ```ruby
 class Person
-  import Mongolow::Model
+  include Mongolow::Model
 
   field :name
   field :email
@@ -47,7 +47,7 @@ You can define your own validations using method validate.
 
 ```ruby
 class Person
-  import Mongolow::Model
+  include Mongolow::Model
 
   field :name
 
@@ -82,7 +82,7 @@ You can define this callbacks in your model:
 
 ```ruby
 class Person
-  import Mongolow::Model
+  include Mongolow::Model
 
   field :name
 
@@ -99,7 +99,7 @@ You can also define your own template methods and call its with `template`.
 
 ```ruby
 class Post
-  import Mongolow::Model
+  include Mongolow::Model
 
   field :title
   field :text
