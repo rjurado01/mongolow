@@ -8,7 +8,7 @@ module Mongolow
       # When new initialize is created new instance variable is added for each field
       #
       def fields
-        @fields ? @fields : []
+        @fields || []
       end
 
       ##
