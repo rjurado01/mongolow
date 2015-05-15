@@ -59,7 +59,7 @@ class Person
 
   field :name
 
-  validate
+  validate do
     self._errors = {}
     self._errors['name'] = 'blank' unless self.name
     self._errors.empty?
@@ -93,7 +93,7 @@ class Person
 
   field :name
 
-  before_save
+  before_save do
     self.name = 'My name'
   end
 end
