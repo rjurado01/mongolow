@@ -38,7 +38,7 @@ module Mongolow
       # @param: query [hash]
       #
       def find(query={})
-        return Mongolow::Cursor.new(self, Driver.session[coll_name].find(query))
+        Mongolow::Cursor.new(self, Driver.session[coll_name].find(query))
       end
 
       ##
@@ -51,7 +51,7 @@ module Mongolow
           if BSON::ObjectId.legal? id
             id = BSON::ObjectId.from_string(id)
           else
-            return nil
+            nil
           end
         end
 
@@ -62,7 +62,7 @@ module Mongolow
       # Returns the number of documents
       #
       def count
-        return Driver.session[coll_name].count
+        Driver.session[coll_name].count
       end
 
       ##
@@ -71,7 +71,7 @@ module Mongolow
       # @param: query [hash]
       #
       def first(query={})
-        return self.new(Driver.session[coll_name].find_one(query))
+        self.new(Driver.session[coll_name].find_one(query))
       end
 
       ##
@@ -97,10 +97,12 @@ module Mongolow
         end
 
         if model = find('_id' => id).first
+          model.run_hook :before_destroy
           model.destroy
-          return true
+          model.run_hook :after_destroy
+          true
         else
-          return false
+          false
         end
       end
     end
@@ -144,7 +146,9 @@ module Mongolow
     # Validates and writes model in database
     #
     def save
-      if self.valid?
+      result = false
+
+      if self.validate!
         self.run_hook :before_save
 
         document =  self._id ? {'_id' => self._id} : {}
@@ -155,28 +159,36 @@ module Mongolow
         end
 
         if self._id
-          Driver.session[self.class.coll_name].update(
+          result = Driver.session[self.class.coll_name].update(
             {'_id' => self._id}, document, {:upsert => true})
         else
-          self._id = Driver.session[self.class.coll_name].insert(document)
+          result = self._id = Driver.session[self.class.coll_name].insert(document)
         end
 
         self.run_hook :after_save
       end
+
+      result ? true : false
     end
 
     ##
     # Updates field of document in database (atomic operation)
     #
     def set(field, value)
-      if self.respond_to?(field) and field.to_s != '_id'
-        Driver.session[self.class.coll_name].update(
-          {'_id' => self._id},
-          {'$set' => {field => value}}
-        )
+      result = false
 
+      if self.respond_to?(field) and field[0] != '_'
         self.send("#{field}=", value)
+
+        if self.validate!
+          result = Driver.session[self.class.coll_name].update(
+            {'_id' => self._id},
+            {'$set' => {field => value}}
+          )
+        end
       end
+
+      result ? true : false
     end
 
     ##
@@ -184,10 +196,10 @@ module Mongolow
     #
     def destroy
       self.run_hook :before_destroy
-
-      Driver.session[self.class.coll_name].remove({'_id' => self._id})
-
+      result = Driver.session[self.class.coll_name].remove({'_id' => self._id})
       self.run_hook :after_save
+
+      result ? true : false
     end
 
     ##
@@ -198,22 +210,32 @@ module Mongolow
     end
 
     ##
-    # Validates and returns if model is valid
+    # Returns true if model has errors
     #
-    def valid?
+    def errors?
+      (self._errors and not self._errors.empty?) ? true : false
+    end
+
+    ##
+    # Validates model and returns true if model is valid
+    #
+    def validate!
       self.run_hook :validate
-      not self._errors or self._errors.empty?
+      not self.errors?
     end
 
     ##
     # Returns hash representation
     # Can receive the name of other method to returns template
+    # If model is invalid, returns errors
     #
     # @param: name [string] instance method to be called
     # @param: options [hash] options used in 'name', method
     #
     def template(name=nil, options=nil)
-      if name and self.respond_to? name
+      if self.errors?
+        self._errors
+      elsif name and self.respond_to? name
         self.send(name, options)
       else
         hash = {'id' => self.id}
@@ -224,7 +246,7 @@ module Mongolow
           end
         end
 
-        return hash
+        hash
       end
     end
   end

@@ -186,11 +186,11 @@ describe "MyModel" do
       end
     end
 
-    describe "valid?" do
+    describe "validate!" do
       it "return true when model is valid" do
         instance = MyModel.new
         instance.should_receive('run_hook').with(:validate)
-        instance.valid?.should == true
+        instance.validate!.should == true
       end
 
       it "return false when model is invalid" do
@@ -204,7 +204,18 @@ describe "MyModel" do
 
         instance = MyModel2.new
         instance.should_receive('run_hook').with(:validate).and_call_original
-        instance.valid?.should == false
+        instance.validate!.should == false
+      end
+    end
+
+    describe "errors?" do
+      it "return if model has errors" do
+        instance = MyModel.new
+        instance.errors?.should == false
+        instance._errors = {}
+        instance.errors?.should == false
+        instance._errors = {name: 'invalid'}
+        instance.errors?.should == true
       end
     end
 
