@@ -19,13 +19,15 @@ class Person
 end
 ```
 
-Mongolow uses the next private fields:
+#### Private fields
+
+Mongolow uses the next private fields **DON'T OVERWRITE !!**:
 
 * _id
 * _errors
 * _hooks
 
-**DON'T OVERWRITE !!**
+Mongolow doesn't save or represent private fields. You can use as virtual fields.
 
 ### Class Methods
 
@@ -42,6 +44,8 @@ Mongolow uses the next private fields:
 * save
 * set(field_name, field_value)
 * destroy
+* validate!
+* errors?
 * template
 
 ### Example
@@ -62,7 +66,6 @@ class Person
   validate do
     self._errors = {}
     self._errors['name'] = 'blank' unless self.name
-    self._errors.empty?
   end
 end
 ```
