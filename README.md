@@ -42,6 +42,8 @@ Mongolow doesn't save or represent private fields. You can use as virtual fields
 ### Instance Methods
 
 * save
+* save!
+* save_without_validation
 * set(field_name, field_value)
 * destroy
 * validate!

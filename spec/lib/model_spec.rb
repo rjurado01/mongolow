@@ -107,16 +107,15 @@ describe "MyModel" do
       @session['my_model'].remove
     end
 
-    describe "save" do
+    describe "save_without_validation" do
       context "when document is new" do
         it "insert document in database" do
           instance = MyModel.new
           instance.name = 'name1'
 
-          instance.should_receive('run_hook').with(:validate)
           instance.should_receive('run_hook').with(:before_save)
           instance.should_receive('run_hook').with(:after_save)
-          instance.save
+          instance.save_without_validation
 
           instance._id.should_not == nil
           instance.name.should == 'name1'
@@ -130,10 +129,9 @@ describe "MyModel" do
           instance = MyModel.find({_id: id_1}).first
           instance.name = 'name1'
 
-          instance.should_receive('run_hook').with(:validate)
           instance.should_receive('run_hook').with(:before_save)
           instance.should_receive('run_hook').with(:after_save)
-          instance.save
+          instance.save_without_validation
 
           instance._id.should_not == nil
           instance.name.should == 'name1'
@@ -147,13 +145,60 @@ describe "MyModel" do
           instance = MyModel.find({_id: id_1}).first
           instance._id = '123'
 
-          instance.should_receive('run_hook').with(:validate)
           instance.should_receive('run_hook').with(:before_save)
           instance.should_receive('run_hook').with(:after_save)
-          instance.save
+          instance.save_without_validation
 
           @session['my_model'].find().count.should == 2
           @session['my_model'].find({'_id' => '123'}).first['name'].should == 'name1'
+        end
+      end
+    end
+
+    describe "save" do
+      it "validate model" do
+        instance = MyModel.new
+        instance.should_receive('validate')
+        instance.save
+      end
+
+      context "when document is valid" do
+        it "save document" do
+          instance = MyModel.new
+          instance.should_receive('save_without_validation')
+          instance.save
+        end
+      end
+
+      context "when document is invalid" do
+        it "don't save document" do
+          instance = MyModel.new
+          instance.stub(:validate).and_return(false)
+          instance.should_not_receive('save_without_validation')
+          instance.save
+        end
+      end
+    end
+
+    describe "save!" do
+      context "when document is invalid" do
+        it "throw an exception" do
+          instance = MyModel.new
+          instance._errors = {name: 'blank'}
+          instance.stub(:validate).and_return(false)
+          expect {
+            instance.save!
+          }.to raise_error(Mongolow::Exceptions::Validations) do |e|
+            expect(e.message).to eq instance._errors.to_s
+          end
+        end
+      end
+
+      context "when document is valid" do
+        it "save document" do
+          instance = MyModel.new
+          instance.should_receive('save_without_validation')
+          instance.save!
         end
       end
     end
@@ -186,11 +231,11 @@ describe "MyModel" do
       end
     end
 
-    describe "validate!" do
+    describe "validate" do
       it "return true when model is valid" do
         instance = MyModel.new
         instance.should_receive('run_hook').with(:validate)
-        instance.validate!.should == true
+        instance.validate.should == true
       end
 
       it "return false when model is invalid" do
@@ -204,7 +249,7 @@ describe "MyModel" do
 
         instance = MyModel2.new
         instance.should_receive('run_hook').with(:validate).and_call_original
-        instance.validate!.should == false
+        instance.validate.should == false
       end
     end
 

@@ -143,29 +143,54 @@ module Mongolow
     end
 
     ##
+    # Writes model in database
+    #
+    def save_without_validation
+      self.run_hook :before_save
+
+      document =  self._id ? {'_id' => self._id} : {}
+      # remove '@' from each instance variable name
+      # don't save internal fields ('_xxxx')
+      self.instance_variables.map{ |x| x.to_s[1..-1] }.each do |field|
+        document[field] = self.send(field) unless field[0] == '_'
+      end
+
+      if self._id
+        result = Driver.session[self.class.coll_name].update(
+          {'_id' => self._id}, document, {:upsert => true})
+      else
+        result = self._id = Driver.session[self.class.coll_name].insert(document)
+      end
+
+      self.run_hook :after_save
+
+      result ? true : false
+    end
+
+    ##
     # Validates and writes model in database
     #
     def save
       result = false
 
-      if self.validate!
-        self.run_hook :before_save
+      if self.validate
+        result = self.save_without_validation
+      end
 
-        document =  self._id ? {'_id' => self._id} : {}
-        # remove '@' from each instance variable name
-        # don't save internal fields ('_xxxx')
-        self.instance_variables.map{ |x| x.to_s[1..-1] }.each do |field|
-          document[field] = self.send(field) unless field[0] == '_'
-        end
+      result ? true : false
+    end
 
-        if self._id
-          result = Driver.session[self.class.coll_name].update(
-            {'_id' => self._id}, document, {:upsert => true})
-        else
-          result = self._id = Driver.session[self.class.coll_name].insert(document)
-        end
+    ##
+    # Validates and writes model in database
+    # Throws an exception when the document is invalid
+    #
+    def save!
+      result = false
 
-        self.run_hook :after_save
+      if self.validate
+        result = self.save_without_validation
+      else
+        raise Exceptions::Validations.new(self._errors)
       end
 
       result ? true : false
@@ -180,7 +205,7 @@ module Mongolow
       if self.respond_to?(field) and field[0] != '_'
         self.send("#{field}=", value)
 
-        if self.validate!
+        if self.validate
           result = Driver.session[self.class.coll_name].update(
             {'_id' => self._id},
             {'$set' => {field => value}}
@@ -219,7 +244,7 @@ module Mongolow
     ##
     # Validates model and returns true if model is valid
     #
-    def validate!
+    def validate
       self.run_hook :validate
       not self.errors?
     end
