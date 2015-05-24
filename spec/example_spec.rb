@@ -30,10 +30,12 @@ describe "Model inheritance example" do
     # check new
     person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})
     person2 = Person.new({name: 'p2', email: 'email2@email.com'})
-    person1.save
-    person2.save
+    person1.name.should == 'p1'
+    person2.name.should == 'p2'
 
     # check save
+    person1.save
+    person2.save
     db_persons = @session['person'].find().to_a
     db_persons.count.should == 2
     db_persons[0]['name'].should == 'p1'
@@ -41,11 +43,16 @@ describe "Model inheritance example" do
     db_persons[1]['name'].should == 'p2'
     db_persons[1]['age'].should == '23'
 
-    # check update
     person2.age = '26'
     person2.save
     db_person = @session['person'].find({'_id' => person2._id}).first
     db_person['age'].should == '26'
+
+    # check update
+    person2.update({name: 'new_name', age: '30'})
+    db_person = @session['person'].find({'_id' => person2._id}).first
+    db_person['name'].should == 'new_name'
+    db_person['age'].should == '30'
 
     # check set
     person2.set('age', nil)
@@ -62,6 +69,9 @@ describe "Model inheritance example" do
     person1.save
     @session['person'].count.should == 0
     person1._errors.should == {'email' => 'black'}
+    person1.errors?.should == true
+    person1.email = 'user1@email.com'
+    person1.validate.should == true
 
     # check template
     person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})

@@ -217,6 +217,19 @@ module Mongolow
     end
 
     ##
+    # Update document with params
+    #
+    def update(params)
+      params.keys.each do |field|
+        if self.respond_to? field and field[0] != '_'
+          self.send("#{field}=", params[field])
+        end
+      end
+
+      self.save
+    end
+
+    ##
     # Removes document from database
     #
     def destroy

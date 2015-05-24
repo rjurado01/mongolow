@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "MyModel" do
+describe Mongolow::Model do
   before :all do
     class MyModel
       include Mongolow::Model
@@ -200,6 +200,16 @@ describe "MyModel" do
           instance.should_receive('save_without_validation')
           instance.save!
         end
+      end
+    end
+
+    describe "update" do
+      it "update document" do
+        id_1 = @session['my_model'].insert({name: 'name1', age: '22'})
+        instance = MyModel.find({_id: id_1}).first
+        instance.update({name: 'name2'})
+
+        @session['my_model'].find({'_id' => id_1}).first['name'].should == 'name2'
       end
     end
 
