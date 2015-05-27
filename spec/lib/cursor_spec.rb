@@ -14,8 +14,7 @@ describe "Mongolow::Cursor" do
   describe "Functionality" do
     context "when create new instance" do
       it "everything works fine" do
-        instance = Mongolow::Cursor.new(Person, [])
-        instance.should_not == nil
+        expect(Mongolow::Cursor.new(Person, [])).not_to eq(nil)
       end
     end
   end
@@ -28,41 +27,43 @@ describe "Mongolow::Cursor" do
     context "first" do
       it "return first model" do
         model = @instance.first
-        model.class.should == Person
-        model.name.should == 'name1'
+        expect(model.class).to eq(Person)
+        expect(model.name).to eq('name1')
       end
     end
 
     context "all" do
       it "return all models" do
         models = @instance.all
-        models.size.should == 2
-        models[0].class.should == Person
-        models[0].name.should == 'name1'
-        models[1].class.should == Person
-        models[1].name.should == 'name2'
+        expect(models.size).to eq(2)
+        expect(models[0].class).to eq(Person)
+        expect(models[0].name).to eq('name1')
+        expect(models[1].class).to eq(Person)
+        expect(models[1].name).to eq('name2')
       end
     end
 
     context "count" do
       it "return number of models" do
-        @instance.count.should == 2
+        expect(@instance.count).to eq(2)
       end
     end
 
     context "limit" do
       it "limited query documents" do
-        @instance.mongo_cursor.stub(:limit).and_return(true)
-        @instance.mongo_cursor.should_receive(:limit)
-        @instance.limit(1).class.should == Mongolow::Cursor
+        cursor = @instance.mongo_cursor
+        allow(cursor).to receive(:limit).and_return(cursor)
+        expect(@instance.limit(1).class).to eq(Mongolow::Cursor)
+        expect(cursor).to have_received(:limit)
       end
     end
 
     context "skip" do
       it "skip n documents" do
-        @instance.mongo_cursor.stub(:skip).and_return(true)
-        @instance.mongo_cursor.should_receive(:skip)
-        @instance.skip(1).class.should == Mongolow::Cursor
+        cursor = @instance.mongo_cursor
+        allow(cursor).to receive(:skip).and_return(cursor)
+        expect(@instance.skip(1).class).to eq(Mongolow::Cursor)
+        expect(cursor).to have_received(:skip)
       end
     end
   end

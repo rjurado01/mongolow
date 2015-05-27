@@ -4,10 +4,10 @@ ENV['ENV'] = 'test'
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
-    expectations.syntax = [:should, :expect]
+    expectations.syntax = :expect
   end
 
   config.mock_with :rspec do |mocks|
-    mocks.syntax = :should
+    mocks.syntax = :expect
   end
 end

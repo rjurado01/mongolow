@@ -30,53 +30,51 @@ describe "Model inheritance example" do
     # check new
     person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})
     person2 = Person.new({name: 'p2', email: 'email2@email.com'})
-    person1.name.should == 'p1'
-    person2.name.should == 'p2'
+    expect(person1.name).to eq('p1')
+    expect(person2.name).to eq('p2')
 
     # check save
     person1.save
     person2.save
     db_persons = @session['person'].find().to_a
-    db_persons.count.should == 2
-    db_persons[0]['name'].should == 'p1'
-    db_persons[0]['age'].should == '25'
-    db_persons[1]['name'].should == 'p2'
-    db_persons[1]['age'].should == '23'
+    expect(db_persons.count).to eq(2)
+    expect(db_persons[0]['name']).to eq('p1')
+    expect(db_persons[0]['age']).to eq('25')
+    expect(db_persons[1]['name']).to eq('p2')
+    expect(db_persons[1]['age']).to eq('23')
 
     person2.age = '26'
     person2.save
-    db_person = @session['person'].find({'_id' => person2._id}).first
-    db_person['age'].should == '26'
+    expect(@session['person'].find({'_id' => person2._id}).first['age']).to eq('26')
 
     # check update
     person2.update({name: 'new_name', age: '30'})
     db_person = @session['person'].find({'_id' => person2._id}).first
-    db_person['name'].should == 'new_name'
-    db_person['age'].should == '30'
+    expect(db_person['name']).to eq('new_name')
+    expect(db_person['age']).to eq('30')
 
     # check set
     person2.set('age', nil)
-    db_person = @session['person'].find({'_id' => person2._id}).first
-    db_person['age'].should == nil
+    expect(@session['person'].find({'_id' => person2._id}).first['age']).to eq(nil)
 
     # check destroy
     person1.destroy
     person2.destroy
-    db_persons = @session['person'].find().count.should == 0
+    expect(@session['person'].find().count).to eq(0)
 
     # check validation
     person1 = Person.new({name: 'p1'})
     person1.save
-    @session['person'].count.should == 0
-    person1._errors.should == {'email' => 'black'}
-    person1.errors?.should == true
+    expect(@session['person'].count).to eq(0)
+    expect(person1._errors).to eq({'email' => 'black'})
+    expect(person1.errors?).to eq(true)
     person1.email = 'user1@email.com'
-    person1.validate.should == true
+    expect(person1.validate).to eq(true)
 
     # check template
     person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})
     person1.save
-    person1.template.should ==
-      {'id' => person1.id, 'name' => 'p1', 'age' => '25', 'email' => 'email1@email.com'}
+    expect(person1.template).to eq(
+      {'id' => person1.id, 'name' => 'p1', 'age' => '25', 'email' => 'email1@email.com'})
   end
 end

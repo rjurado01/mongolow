@@ -11,13 +11,13 @@ describe Mongolow::Model do
     context "when create new instance" do
       it "everything works fine" do
         instance = MyModel.new
-        instance.should_not == nil
+        expect(instance).not_to eq(nil)
 
         MyModel.send('field', 'name')
         instance = MyModel.new({_id: '123', name: 'name1'})
-        instance.should_not == nil
-        instance._id.should == '123'
-        instance.name.should == 'name1'
+        expect(instance).not_to eq(nil)
+        expect(instance._id).to eq('123')
+        expect(instance.name).to eq('name1')
       end
     end
   end
@@ -38,8 +38,8 @@ describe Mongolow::Model do
         id_1 = @session['my_model'].insert({name: 'name1'})
 
         query = MyModel.find({'_id' => id_1})
-        query.class.should == Mongolow::Cursor
-        query.mongo_cursor.selector.should == {'_id' => id_1}
+        expect(query.class).to eq(Mongolow::Cursor)
+        expect(query.mongo_cursor.selector).to eq({'_id' => id_1})
       end
     end
 
@@ -48,9 +48,9 @@ describe Mongolow::Model do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
 
-        MyModel.find_by_id('invalid').should == nil
-        MyModel.find_by_id(id_2.to_s).name.should == 'name2'
-        MyModel.find_by_id(id_2).name.should == 'name2'
+        expect(MyModel.find_by_id('invalid')).to eq(nil)
+        expect(MyModel.find_by_id(id_2.to_s).name).to eq('name2')
+        expect(MyModel.find_by_id(id_2).name).to eq('name2')
       end
     end
 
@@ -59,7 +59,7 @@ describe Mongolow::Model do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
         MyModel.destroy_all
-        @session['my_model'].count.should == 0
+        expect(@session['my_model'].count).to eq(0)
       end
     end
 
@@ -68,11 +68,11 @@ describe Mongolow::Model do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
 
-        MyModel.destroy_by_id('invalid').should == false
-        MyModel.destroy_by_id(id_2.to_s).should == true
-        @session['my_model'].count.should == 1
-        MyModel.destroy_by_id(id_1).should == true
-        @session['my_model'].count.should == 0
+        expect(MyModel.destroy_by_id('invalid')).to eq(false)
+        expect(MyModel.destroy_by_id(id_2.to_s)).to eq(true)
+        expect(@session['my_model'].count).to eq(1)
+        expect(MyModel.destroy_by_id(id_1)).to eq(true)
+        expect(@session['my_model'].count).to eq(0)
       end
     end
 
@@ -80,7 +80,7 @@ describe Mongolow::Model do
       it "return number of models" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
-        MyModel.count.should == 2
+        expect(MyModel.count).to eq(2)
       end
     end
 
@@ -88,10 +88,10 @@ describe Mongolow::Model do
       it "return first model" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
-        MyModel.first._id.should == id_1
-        MyModel.first.class.should == MyModel
-        MyModel.first(name: 'name2')._id.should == id_2
-        MyModel.first({name: 'name2'})._id.should == id_2
+        expect(MyModel.first._id).to eq(id_1)
+        expect(MyModel.first.class).to eq(MyModel)
+        expect(MyModel.first(name: 'name2')._id).to eq(id_2)
+        expect(MyModel.first({name: 'name2'})._id).to eq(id_2)
       end
     end
   end
@@ -112,14 +112,14 @@ describe Mongolow::Model do
         it "insert document in database" do
           instance = MyModel.new
           instance.name = 'name1'
-
-          instance.should_receive('run_hook').with(:before_save)
-          instance.should_receive('run_hook').with(:after_save)
+          allow(instance).to receive('run_hook').and_return(true)
           instance.save_without_validation
 
-          instance._id.should_not == nil
-          instance.name.should == 'name1'
-          @session['my_model'].find().count.should == 1
+          expect(instance).to have_received('run_hook').with(:before_save)
+          expect(instance).to have_received('run_hook').with(:after_save)
+          expect(instance._id).not_to eq(nil)
+          expect(instance.name).to eq('name1')
+          expect(@session['my_model'].find().count).to eq(1)
         end
       end
 
@@ -128,14 +128,14 @@ describe Mongolow::Model do
           id_1 = @session['my_model'].insert({name: 'name1'})
           instance = MyModel.find({_id: id_1}).first
           instance.name = 'name1'
-
-          instance.should_receive('run_hook').with(:before_save)
-          instance.should_receive('run_hook').with(:after_save)
+          allow(instance).to receive('run_hook').and_return(true)
           instance.save_without_validation
 
-          instance._id.should_not == nil
-          instance.name.should == 'name1'
-          @session['my_model'].find().count.should == 1
+          expect(instance).to have_received('run_hook').with(:before_save)
+          expect(instance).to have_received('run_hook').with(:after_save)
+          expect(instance._id).not_to eq(nil)
+          expect(instance.name).to eq('name1')
+          expect(@session['my_model'].find().count).to eq(1)
         end
       end
 
@@ -144,13 +144,13 @@ describe Mongolow::Model do
           id_1 = @session['my_model'].insert({name: 'name1'})
           instance = MyModel.find({_id: id_1}).first
           instance._id = '123'
-
-          instance.should_receive('run_hook').with(:before_save)
-          instance.should_receive('run_hook').with(:after_save)
+          allow(instance).to receive('run_hook').and_return(true)
           instance.save_without_validation
 
-          @session['my_model'].find().count.should == 2
-          @session['my_model'].find({'_id' => '123'}).first['name'].should == 'name1'
+          expect(instance).to have_received('run_hook').with(:before_save)
+          expect(instance).to have_received('run_hook').with(:after_save)
+          expect(@session['my_model'].find().count).to eq(2)
+          expect(@session['my_model'].find({'_id' => '123'}).first['name']).to eq('name1')
         end
       end
     end
@@ -158,24 +158,27 @@ describe Mongolow::Model do
     describe "save" do
       it "validate model" do
         instance = MyModel.new
-        instance.should_receive('validate')
+        allow(instance).to receive('validate').and_return(true)
         instance.save
+        expect(instance).to have_received('validate')
       end
 
       context "when document is valid" do
         it "save document" do
           instance = MyModel.new
-          instance.should_receive('save_without_validation')
+          allow(instance).to receive('save_without_validation').and_return(true)
           instance.save
+          expect(instance).to have_received('save_without_validation')
         end
       end
 
       context "when document is invalid" do
         it "don't save document" do
           instance = MyModel.new
-          instance.stub(:validate).and_return(false)
-          instance.should_not_receive('save_without_validation')
+          allow(instance).to receive('validate').and_return(false)
+          allow(instance).to receive('save_without_validation').and_return(true)
           instance.save
+          expect(instance).not_to have_received('save_without_validation')
         end
       end
     end
@@ -185,7 +188,7 @@ describe Mongolow::Model do
         it "throw an exception" do
           instance = MyModel.new
           instance._errors = {name: 'blank'}
-          instance.stub(:validate).and_return(false)
+          allow(instance).to receive('validate').and_return(false)
           expect {
             instance.save!
           }.to raise_error(Mongolow::Exceptions::Validations) do |e|
@@ -197,8 +200,9 @@ describe Mongolow::Model do
       context "when document is valid" do
         it "save document" do
           instance = MyModel.new
-          instance.should_receive('save_without_validation')
+          allow(instance).to receive('save_without_validation').and_return(true)
           instance.save!
+          expect(instance).to have_received('save_without_validation')
         end
       end
     end
@@ -209,7 +213,7 @@ describe Mongolow::Model do
         instance = MyModel.find({_id: id_1}).first
         instance.update({name: 'name2'})
 
-        @session['my_model'].find({'_id' => id_1}).first['name'].should == 'name2'
+        expect(@session['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
       end
     end
 
@@ -219,7 +223,7 @@ describe Mongolow::Model do
         instance = MyModel.find({_id: id_1}).first
         instance.set('name', 'name2')
 
-        @session['my_model'].find({'_id' => id_1}).first['name'].should == 'name2'
+        expect(@session['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
       end
     end
 
@@ -229,7 +233,7 @@ describe Mongolow::Model do
         instance = MyModel.find({_id: id_1}).first
         instance.destroy
 
-        @session['my_model'].find().count.should == 0
+        expect(@session['my_model'].find().count).to eq(0)
       end
     end
 
@@ -237,15 +241,15 @@ describe Mongolow::Model do
       it "return _id field in string format" do
         instance = MyModel.new
         instance.save
-        instance.id.should == instance._id.to_s
+        expect(instance.id).to eq(instance._id.to_s)
       end
     end
 
     describe "validate" do
       it "return true when model is valid" do
         instance = MyModel.new
-        instance.should_receive('run_hook').with(:validate)
-        instance.validate.should == true
+        allow(instance).to receive('run_hook').and_return(true)
+        expect(instance.validate).to eq(true)
       end
 
       it "return false when model is invalid" do
@@ -258,19 +262,20 @@ describe Mongolow::Model do
         end
 
         instance = MyModel2.new
-        instance.should_receive('run_hook').with(:validate).and_call_original
-        instance.validate.should == false
+        allow(instance).to receive('run_hook').and_call_original
+        expect(instance.validate).to eq(false)
+        expect(instance).to have_received('run_hook').with(:validate)
       end
     end
 
     describe "errors?" do
       it "return if model has errors" do
         instance = MyModel.new
-        instance.errors?.should == false
+        expect(instance.errors?).to eq(false)
         instance._errors = {}
-        instance.errors?.should == false
+        expect(instance.errors?).to eq(false)
         instance._errors = {name: 'invalid'}
-        instance.errors?.should == true
+        expect(instance.errors?).to eq(true)
       end
     end
 
@@ -294,16 +299,16 @@ describe Mongolow::Model do
         instance = MyModel.new({name: 'm1', email: 'm1@email.com'})
         instance.save
 
-        instance.template.should == {
+        expect(instance.template).to eq({
           'id' => instance.id,
           'name' => 'm1',
           'email' => 'm1@email.com'
-        }
-        instance.template('custom_template', {role: 'admin'}).should == {
+        })
+        expect(instance.template('custom_template', {role: 'admin'})).to eq({
           'custom_name' => 'm1',
           'custom_email' => 'm1@email.com',
           'role' => 'admin'
-        }
+        })
       end
     end
   end
