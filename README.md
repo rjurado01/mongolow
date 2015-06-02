@@ -105,6 +105,34 @@ class Person
 end
 ```
 
+## Changes
+
+Mongolow saves a copy of fields values when you create new instace of document or save it.
+
+```ruby
+class Post
+  include Mongolow::Model
+
+  field :title
+  field :text
+end
+
+p = Post.new({title: 'Title1', text: 'Example text 1.'})
+p.title = 'Title2'
+p._old_values
+# {'title' => 'Title1', 'text' => 'Example text 1.'}
+
+p.save
+p._old_values
+# {'title' => 'Title2', 'text' => 'Example text 1.'}
+```
+
+### Methods
+
+* changed
+* changed?(field)
+
+
 ## Templates
 
 You can use `template` method for get model hash representation.  

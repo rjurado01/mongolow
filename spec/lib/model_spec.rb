@@ -4,20 +4,32 @@ describe Mongolow::Model do
   before :all do
     class MyModel
       include Mongolow::Model
+      field :name
     end
   end
 
   describe "Functionality" do
     context "when create new instance" do
-      it "everything works fine" do
+      it "be valid" do
         instance = MyModel.new
         expect(instance).not_to eq(nil)
+      end
 
-        MyModel.send('field', 'name')
+      it "initializes values" do
         instance = MyModel.new({_id: '123', name: 'name1'})
         expect(instance).not_to eq(nil)
         expect(instance._id).to eq('123')
         expect(instance.name).to eq('name1')
+      end
+
+      it "initializes _old_values" do
+        class NewModel
+          include Mongolow::Model
+        end
+
+        allow_any_instance_of(NewModel).to receive(:set_old_values).and_return(true)
+        instance = NewModel.new
+        expect(instance).to have_received(:set_old_values)
       end
     end
   end
@@ -34,7 +46,7 @@ describe Mongolow::Model do
     end
 
     describe "find" do
-      it "return mongodb query" do
+      it "returns mongodb query" do
         id_1 = @session['my_model'].insert({name: 'name1'})
 
         query = MyModel.find({'_id' => id_1})
@@ -44,7 +56,7 @@ describe Mongolow::Model do
     end
 
     describe "find_by_id" do
-      it "return model instance" do
+      it "returns model instance" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
 
@@ -64,7 +76,7 @@ describe Mongolow::Model do
     end
 
     describe "destroy_by_id" do
-      it "return model instance" do
+      it "returns model instance" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
 
@@ -77,7 +89,7 @@ describe Mongolow::Model do
     end
 
     describe "count" do
-      it "return number of models" do
+      it "returns number of models" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
         expect(MyModel.count).to eq(2)
@@ -85,7 +97,7 @@ describe Mongolow::Model do
     end
 
     describe "first" do
-      it "return first model" do
+      it "returns first model" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         id_2 = @session['my_model'].insert({name: 'name2'})
         expect(MyModel.first._id).to eq(id_1)
@@ -109,7 +121,7 @@ describe Mongolow::Model do
 
     describe "save_without_validation" do
       context "when document is new" do
-        it "insert document in database" do
+        it "inserts document in database" do
           instance = MyModel.new
           instance.name = 'name1'
           allow(instance).to receive('run_hook').and_return(true)
@@ -124,7 +136,7 @@ describe Mongolow::Model do
       end
 
       context "when document already exists in database" do
-        it "update document in database" do
+        it "updates document in database" do
           id_1 = @session['my_model'].insert({name: 'name1'})
           instance = MyModel.find({_id: id_1}).first
           instance.name = 'name1'
@@ -153,6 +165,13 @@ describe Mongolow::Model do
           expect(@session['my_model'].find({'_id' => '123'}).first['name']).to eq('name1')
         end
       end
+
+      it "save old values" do
+        instance = MyModel.new({name: 'p1'})
+        instance.name = 'p2'
+        instance.save
+        expect(instance._old_values).to eq({'name' => 'p2'})
+      end
     end
 
     describe "save" do
@@ -164,7 +183,7 @@ describe Mongolow::Model do
       end
 
       context "when document is valid" do
-        it "save document" do
+        it "saves document" do
           instance = MyModel.new
           allow(instance).to receive('save_without_validation').and_return(true)
           instance.save
@@ -173,7 +192,7 @@ describe Mongolow::Model do
       end
 
       context "when document is invalid" do
-        it "don't save document" do
+        it "doesn't save document" do
           instance = MyModel.new
           allow(instance).to receive('validate').and_return(false)
           allow(instance).to receive('save_without_validation').and_return(true)
@@ -185,7 +204,7 @@ describe Mongolow::Model do
 
     describe "save!" do
       context "when document is invalid" do
-        it "throw an exception" do
+        it "throws an exception" do
           instance = MyModel.new
           instance._errors = {name: 'blank'}
           allow(instance).to receive('validate').and_return(false)
@@ -198,7 +217,7 @@ describe Mongolow::Model do
       end
 
       context "when document is valid" do
-        it "save document" do
+        it "saves document" do
           instance = MyModel.new
           allow(instance).to receive('save_without_validation').and_return(true)
           instance.save!
@@ -208,7 +227,7 @@ describe Mongolow::Model do
     end
 
     describe "update" do
-      it "update document" do
+      it "updates document" do
         id_1 = @session['my_model'].insert({name: 'name1', age: '22'})
         instance = MyModel.find({_id: id_1}).first
         instance.update({name: 'name2'})
@@ -218,7 +237,7 @@ describe Mongolow::Model do
     end
 
     describe "set" do
-      it "update field" do
+      it "updates field" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         instance = MyModel.find({_id: id_1}).first
         instance.set('name', 'name2')
@@ -228,7 +247,7 @@ describe Mongolow::Model do
     end
 
     describe "delete" do
-      it "delete field from database" do
+      it "deletes field from database" do
         id_1 = @session['my_model'].insert({name: 'name1'})
         instance = MyModel.find({_id: id_1}).first
         instance.destroy
@@ -238,7 +257,7 @@ describe Mongolow::Model do
     end
 
     describe "id" do
-      it "return _id field in string format" do
+      it "returns _id field in string format" do
         instance = MyModel.new
         instance.save
         expect(instance.id).to eq(instance._id.to_s)
@@ -246,13 +265,13 @@ describe Mongolow::Model do
     end
 
     describe "validate" do
-      it "return true when model is valid" do
+      it "returns true when model is valid" do
         instance = MyModel.new
         allow(instance).to receive('run_hook').and_return(true)
         expect(instance.validate).to eq(true)
       end
 
-      it "return false when model is invalid" do
+      it "returns false when model is invalid" do
         class MyModel2
           include Mongolow::Model
 
@@ -269,7 +288,7 @@ describe Mongolow::Model do
     end
 
     describe "errors?" do
-      it "return if model has errors" do
+      it "returns if model has errors" do
         instance = MyModel.new
         expect(instance.errors?).to eq(false)
         instance._errors = {}
@@ -280,7 +299,7 @@ describe Mongolow::Model do
     end
 
     describe "template" do
-      it "return all fields" do
+      it "returns all fields" do
         class MyModel
           include Mongolow::Model
 

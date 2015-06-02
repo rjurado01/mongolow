@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "Mongolow::Cursor" do
+describe Mongolow::Cursor do
   before :all do
     class Person
       attr_accessor :name

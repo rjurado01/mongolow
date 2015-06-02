@@ -108,12 +108,15 @@ module Mongolow
     end
 
     ##
-    # Add class methods and hooks
+    # Adds class methods and hooks
     #
     def self.included(base)
-      base.instance_variable_set(:@fields, ['_id', '_errors'])
+      base.instance_variable_set(:@fields, ['_id', '_errors', '_old_values'])
+
       base.extend(ClassMethods)
       base.send :include, Hooks
+      base.send :include, Changes
+
       base.define_hook :validate
       base.define_hook :after_initialize
       base.define_hook :before_save
@@ -140,6 +143,7 @@ module Mongolow
       end
 
       self.run_hook :after_initialize
+      set_old_values
     end
 
     ##
@@ -163,6 +167,7 @@ module Mongolow
       end
 
       self.run_hook :after_save
+      set_old_values
 
       result ? true : false
     end
