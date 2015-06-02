@@ -246,6 +246,29 @@ module Mongolow
     end
 
     ##
+    # Reload fields with database values
+    #
+    def reload
+      db_document = self.class.find({_id: self._id}).mongo_cursor.first
+
+      if db_document
+        # initialize values of fields
+        db_document.keys.each do |field|
+          if self.respond_to? field and field != '_id'
+            self.send("#{field}=", db_document[field])
+          end
+        end
+
+        self._errors = {}
+        self.run_hook :after_initialize
+        set_old_values
+        self
+      else
+        false
+      end
+    end
+
+    ##
     # Return mongodb id in string format
     #
     def id

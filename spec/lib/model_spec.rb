@@ -264,6 +264,24 @@ describe Mongolow::Model do
       end
     end
 
+    describe "reload" do
+      context "when document is saved" do
+        it "reloads object with database values" do
+          instance = MyModel.new({name: 'p1'})
+          instance.save
+          instance.name = 'p2'
+          expect(instance.reload.name).to eq('p1')
+        end
+      end
+
+      context "when document is not saved" do
+        it "returns false" do
+          instance = MyModel.new({name: 'p1'})
+          expect(instance.reload).to eq(false)
+        end
+      end
+    end
+
     describe "validate" do
       it "returns true when model is valid" do
         instance = MyModel.new

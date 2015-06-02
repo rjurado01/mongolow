@@ -47,9 +47,12 @@ Mongolow doesn't save or represent private fields. You can use as virtual fields
 * update(params)
 * set(field_name, field_value)
 * destroy
+* reload
 * validate!
 * errors?
 * template
+* changed
+* changed?(field_name)
 
 ### Example
 
@@ -126,12 +129,6 @@ p.save
 p._old_values
 # {'title' => 'Title2', 'text' => 'Example text 1.'}
 ```
-
-### Methods
-
-* changed
-* changed?(field)
-
 
 ## Templates
 
