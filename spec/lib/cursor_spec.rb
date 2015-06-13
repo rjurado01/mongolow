@@ -24,7 +24,7 @@ describe Mongolow::Cursor do
       @instance = Mongolow::Cursor.new(Person, [{'name' => 'name1'}, {'name' => 'name2'}])
     end
 
-    context "first" do
+    describe "first" do
       it "return first model" do
         model = @instance.first
         expect(model.class).to eq(Person)
@@ -32,7 +32,7 @@ describe Mongolow::Cursor do
       end
     end
 
-    context "all" do
+    describe "all" do
       it "return all models" do
         models = @instance.all
         expect(models.size).to eq(2)
@@ -43,13 +43,13 @@ describe Mongolow::Cursor do
       end
     end
 
-    context "count" do
+    describe "count" do
       it "return number of models" do
         expect(@instance.count).to eq(2)
       end
     end
 
-    context "limit" do
+    describe "limit" do
       it "limited query documents" do
         cursor = @instance.mongo_cursor
         allow(cursor).to receive(:limit).and_return(cursor)
@@ -58,12 +58,26 @@ describe Mongolow::Cursor do
       end
     end
 
-    context "skip" do
+    describe "skip" do
       it "skip n documents" do
         cursor = @instance.mongo_cursor
         allow(cursor).to receive(:skip).and_return(cursor)
         expect(@instance.skip(1).class).to eq(Mongolow::Cursor)
         expect(cursor).to have_received(:skip)
+      end
+    end
+
+    describe "find" do
+      it "add options to mongo cursor selector" do
+        class MongoCursor
+          attr_accessor :selector
+        end
+
+        mongo_cursor = MongoCursor.new
+        mongo_cursor.selector = {one: 1}
+        cursor = Mongolow::Cursor.new(Person, mongo_cursor)
+        cursor.find({two: 2})
+        expect(cursor.mongo_cursor.selector).to eq({one: 1, two: 2})
       end
     end
   end

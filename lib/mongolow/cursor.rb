@@ -34,5 +34,10 @@ module Mongolow
       @mongo_cursor = @mongo_cursor.skip(n)
       return self
     end
+
+    def find(selector)
+      @mongo_cursor.selector.merge!(selector)
+      return self
+    end
   end
 end

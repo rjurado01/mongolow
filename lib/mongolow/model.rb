@@ -38,7 +38,7 @@ module Mongolow
       # @param: query [hash]
       #
       def find(query={})
-        Mongolow::Cursor.new(self, Driver.session[coll_name].find(query))
+        Mongolow::Cursor.new(self, Driver.client[coll_name].find(query))
       end
 
       ##
@@ -62,7 +62,7 @@ module Mongolow
       # Returns the number of documents
       #
       def count
-        Driver.session[coll_name].count
+        Driver.client[coll_name].find.count
       end
 
       ##
@@ -71,14 +71,14 @@ module Mongolow
       # @param: query [hash]
       #
       def first(query={})
-        self.new(Driver.session[coll_name].find_one(query))
+        self.new(Driver.client[coll_name].find(query).first)
       end
 
       ##
       # Removes all documents
       #
       def destroy_all
-        Driver.session[coll_name].remove
+        Driver.client[coll_name].drop
       end
 
       ##
@@ -151,8 +151,8 @@ module Mongolow
     #
     def save_without_validation
       self.run_hook :before_save
+      document =  {}
 
-      document =  self._id ? {'_id' => self._id} : {}
       # remove '@' from each instance variable name
       # don't save internal fields ('_xxxx')
       self.instance_variables.map{ |x| x.to_s[1..-1] }.each do |field|
@@ -160,10 +160,12 @@ module Mongolow
       end
 
       if self._id
-        result = Driver.session[self.class.coll_name].update(
-          {'_id' => self._id}, document, {:upsert => true})
+        result = Driver.client[self.class.coll_name]
+          .find({'_id' => self._id}).update_one(document, {:upsert => true})
       else
-        result = self._id = Driver.session[self.class.coll_name].insert(document)
+        document['_id'] = BSON::ObjectId.new
+        Driver.client[self.class.coll_name].insert_one(document)
+        self._id = document['_id']
       end
 
       self.run_hook :after_save
@@ -211,10 +213,8 @@ module Mongolow
         self.send("#{field}=", value)
 
         if self.validate
-          result = Driver.session[self.class.coll_name].update(
-            {'_id' => self._id},
-            {'$set' => {field => value}}
-          )
+          result = Driver.client[self.class.coll_name].find({'_id' => self._id})
+            .update_one({'$set' => {field => value}})
         end
       end
 
@@ -239,7 +239,7 @@ module Mongolow
     #
     def destroy
       self.run_hook :before_destroy
-      result = Driver.session[self.class.coll_name].remove({'_id' => self._id})
+      result = Driver.client[self.class.coll_name].find({'_id' => self._id}).delete_one
       self.run_hook :after_save
 
       result ? true : false

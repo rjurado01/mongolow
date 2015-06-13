@@ -2,21 +2,18 @@ PATH
   remote: .
   specs:
     mongolow (0.0.1)
-      bson_ext (~> 1.12.0)
       hooks
-      mongo (~> 1.12.0)
+      mongo (~> 2.0.4)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    bson (1.12.1)
-    bson_ext (1.12.1)
-      bson (~> 1.12.1)
+    bson (3.0.4)
     diff-lcs (1.2.5)
     hooks (0.4.0)
       uber (~> 0.0.4)
-    mongo (1.12.1)
-      bson (= 1.12.1)
+    mongo (2.0.4)
+      bson (~> 3.0)
     rspec (3.2.0)
       rspec-core (~> 3.2.0)
       rspec-expectations (~> 3.2.0)

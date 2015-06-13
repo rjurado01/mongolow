@@ -6,6 +6,8 @@ describe Mongolow::Model do
       include Mongolow::Model
       field :name
     end
+
+    Mongo::Logger.logger = Logger.new('/dev/null')
   end
 
   describe "Functionality" do
@@ -36,18 +38,18 @@ describe Mongolow::Model do
 
   describe "Class Methods" do
     before :all do
-      @session = MongoClient.new( '127.0.0.1', 27017 ).db( 'mongolow_test' )
+      @client = Mongo::Client.new('mongodb://127.0.0.1:27017/mongolow_test')
       Mongolow::Driver.initialize('127.0.0.1', 27017, 'mongolow_test')
       MyModel.send('field', 'name')
     end
 
     before do
-      @session['my_model'].remove
+      @client['my_model'].drop
     end
 
     describe "find" do
       it "returns mongodb query" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
+        id_1 = @client['my_model'].insert_one({name: 'name1'})
 
         query = MyModel.find({'_id' => id_1})
         expect(query.class).to eq(Mongolow::Cursor)
@@ -57,8 +59,10 @@ describe Mongolow::Model do
 
     describe "find_by_id" do
       it "returns model instance" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
-        id_2 = @session['my_model'].insert({name: 'name2'})
+        id_1 = BSON::ObjectId.new
+        id_2 = BSON::ObjectId.new
+        @client['my_model'].insert_one({_id: id_1, name: 'name1'})
+        @client['my_model'].insert_one({_id: id_2, name: 'name2'})
 
         expect(MyModel.find_by_id('invalid')).to eq(nil)
         expect(MyModel.find_by_id(id_2.to_s).name).to eq('name2')
@@ -68,38 +72,42 @@ describe Mongolow::Model do
 
     describe "destroy_all" do
       it "remove all documents" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
-        id_2 = @session['my_model'].insert({name: 'name2'})
+        @client['my_model'].insert_one({name: 'name1'})
+        @client['my_model'].insert_one({name: 'name2'})
         MyModel.destroy_all
-        expect(@session['my_model'].count).to eq(0)
+        expect(@client['my_model'].find.count).to eq(0)
       end
     end
 
     describe "destroy_by_id" do
       it "returns model instance" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
-        id_2 = @session['my_model'].insert({name: 'name2'})
+        id_1 = BSON::ObjectId.new
+        id_2 = BSON::ObjectId.new
+        @client['my_model'].insert_one({_id: id_1, name: 'name1'})
+        @client['my_model'].insert_one({_id: id_2, name: 'name2'})
 
         expect(MyModel.destroy_by_id('invalid')).to eq(false)
         expect(MyModel.destroy_by_id(id_2.to_s)).to eq(true)
-        expect(@session['my_model'].count).to eq(1)
+        expect(@client['my_model'].find.count).to eq(1)
         expect(MyModel.destroy_by_id(id_1)).to eq(true)
-        expect(@session['my_model'].count).to eq(0)
+        expect(@client['my_model'].find.count).to eq(0)
       end
     end
 
     describe "count" do
       it "returns number of models" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
-        id_2 = @session['my_model'].insert({name: 'name2'})
+        id_1 = @client['my_model'].insert_one({name: 'name1'})
+        id_2 = @client['my_model'].insert_one({name: 'name2'})
         expect(MyModel.count).to eq(2)
       end
     end
 
     describe "first" do
       it "returns first model" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
-        id_2 = @session['my_model'].insert({name: 'name2'})
+        id_1 = BSON::ObjectId.new
+        id_2 = BSON::ObjectId.new
+        @client['my_model'].insert_one({_id: id_1, name: 'name1'})
+        @client['my_model'].insert_one({_id: id_2, name: 'name2'})
         expect(MyModel.first._id).to eq(id_1)
         expect(MyModel.first.class).to eq(MyModel)
         expect(MyModel.first(name: 'name2')._id).to eq(id_2)
@@ -110,18 +118,18 @@ describe Mongolow::Model do
 
   describe "Instance Methods" do
     before :all do
-      @session = MongoClient.new( '127.0.0.1', 27017 ).db( 'mongolow_test' )
+      @client = Mongo::Client.new('mongodb://127.0.0.1:27017/mongolow_test')
       Mongolow::Driver.initialize('127.0.0.1', 27017, 'mongolow_test')
       MyModel.send('field', 'name')
     end
 
     before do
-      @session['my_model'].remove
+      @client['my_model'].drop
     end
 
     describe "save_without_validation" do
       context "when document is new" do
-        it "inserts document in database" do
+        it "insert_ones document in database" do
           instance = MyModel.new
           instance.name = 'name1'
           allow(instance).to receive('run_hook').and_return(true)
@@ -131,13 +139,14 @@ describe Mongolow::Model do
           expect(instance).to have_received('run_hook').with(:after_save)
           expect(instance._id).not_to eq(nil)
           expect(instance.name).to eq('name1')
-          expect(@session['my_model'].find().count).to eq(1)
+          expect(@client['my_model'].find().count).to eq(1)
         end
       end
 
       context "when document already exists in database" do
         it "updates document in database" do
-          id_1 = @session['my_model'].insert({name: 'name1'})
+          id_1 = BSON::ObjectId.new
+          @client['my_model'].insert_one({_id: id_1, name: 'name1'})
           instance = MyModel.find({_id: id_1}).first
           instance.name = 'name1'
           allow(instance).to receive('run_hook').and_return(true)
@@ -147,13 +156,14 @@ describe Mongolow::Model do
           expect(instance).to have_received('run_hook').with(:after_save)
           expect(instance._id).not_to eq(nil)
           expect(instance.name).to eq('name1')
-          expect(@session['my_model'].find().count).to eq(1)
+          expect(@client['my_model'].find().count).to eq(1)
         end
       end
 
       context "when change document _id" do
         it "insert new document in database" do
-          id_1 = @session['my_model'].insert({name: 'name1'})
+          id_1 = BSON::ObjectId.new
+          @client['my_model'].insert_one({_id: id_1, name: 'name1'})
           instance = MyModel.find({_id: id_1}).first
           instance._id = '123'
           allow(instance).to receive('run_hook').and_return(true)
@@ -161,8 +171,8 @@ describe Mongolow::Model do
 
           expect(instance).to have_received('run_hook').with(:before_save)
           expect(instance).to have_received('run_hook').with(:after_save)
-          expect(@session['my_model'].find().count).to eq(2)
-          expect(@session['my_model'].find({'_id' => '123'}).first['name']).to eq('name1')
+          expect(@client['my_model'].find().count).to eq(2)
+          expect(@client['my_model'].find({'_id' => '123'}).first['name']).to eq('name1')
         end
       end
 
@@ -228,31 +238,34 @@ describe Mongolow::Model do
 
     describe "update" do
       it "updates document" do
-        id_1 = @session['my_model'].insert({name: 'name1', age: '22'})
+        id_1 = BSON::ObjectId.new
+        @client['my_model'].insert_one({_id: id_1, name: 'name1', age: '22'})
         instance = MyModel.find({_id: id_1}).first
         instance.update({name: 'name2'})
 
-        expect(@session['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
+        expect(@client['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
       end
     end
 
     describe "set" do
       it "updates field" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
+        id_1 = BSON::ObjectId.new
+        @client['my_model'].insert_one({_id: id_1, name: 'name1'})
         instance = MyModel.find({_id: id_1}).first
         instance.set('name', 'name2')
 
-        expect(@session['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
+        expect(@client['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
       end
     end
 
     describe "delete" do
       it "deletes field from database" do
-        id_1 = @session['my_model'].insert({name: 'name1'})
+        id_1 = BSON::ObjectId.new
+        @client['my_model'].insert_one({_id: id_1, name: 'name1'})
         instance = MyModel.find({_id: id_1}).first
         instance.destroy
 
-        expect(@session['my_model'].find().count).to eq(0)
+        expect(@client['my_model'].find().count).to eq(0)
       end
     end
 

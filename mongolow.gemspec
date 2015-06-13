@@ -17,8 +17,7 @@ Gem::Specification.new do |gem|
   gem.test_files = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "mongo", "~> 1.12.0"
-  gem.add_dependency "bson_ext", "~> 1.12.0"
+  gem.add_dependency "mongo", "~> 2.0.4"
   gem.add_dependency "hooks"
   gem.add_development_dependency "rspec"
 end
