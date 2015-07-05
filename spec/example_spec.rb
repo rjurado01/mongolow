@@ -85,5 +85,8 @@ describe "Model inheritance example" do
     cursor = Person.find({age: '40'})
     expect(cursor.count).to eq(2)
     expect(cursor.find({name: 'p10'}).count).to eq(1)
+
+    # close connection
+    # Mongolow::Driver.close
   end
 end

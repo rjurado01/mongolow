@@ -1,5 +1,6 @@
 # files
 *.swp
+*.log
 
 # folders
 .bundle/
