@@ -5,6 +5,7 @@ describe Mongolow::Model do
     class MyModel
       include Mongolow::Model
       field :name
+      attr_reader :check
     end
 
     Mongo::Logger.logger = Logger.new('/dev/null')
@@ -33,6 +34,11 @@ describe Mongolow::Model do
         instance = NewModel.new
         expect(instance).to have_received(:set_old_values)
       end
+
+      it "accept attr_reader fields" do
+        instance = MyModel.new({check: 'checking'})
+        expect(instance.check).to eq('checking')
+      end
     end
   end
 
@@ -45,6 +51,18 @@ describe Mongolow::Model do
 
     before do
       @client['my_model'].drop
+    end
+
+    describe "fields" do
+      it "returns all model fields" do
+        expect(MyModel.fields).to eq(['_id', '_errors', '_old_values', 'name'])
+      end
+    end
+
+    describe "public_fields" do
+      it "returns public fields (will be persisted in database)" do
+        expect(MyModel.public_fields).to eq(['name'])
+      end
     end
 
     describe "find" do
@@ -244,6 +262,15 @@ describe Mongolow::Model do
         instance.update({name: 'name2'})
 
         expect(@client['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
+      end
+
+      it "accept attr_reader fields" do
+        id_1 = BSON::ObjectId.new
+        @client['my_model'].insert_one({_id: id_1, name: 'name1', age: '22'})
+        instance = MyModel.find({_id: id_1}).first
+        instance.update({check: 'checking'})
+
+        expect(instance.check).to eq('checking')
       end
     end
 

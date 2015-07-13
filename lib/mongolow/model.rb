@@ -5,10 +5,18 @@ module Mongolow
     module ClassMethods
       ##
       # Returns model fields
-      # When new initialize is created new instance variable is added for each field
+      # When new instance is created new instance variable is added for each field
       #
       def fields
         @fields || []
+      end
+
+      ##
+      # Returns public fields
+      # Internal fields begin with '_'
+      #
+      def public_fields
+        fields.select{ |field_name| field_name[0] != '_' }
       end
 
       ##
@@ -138,7 +146,7 @@ module Mongolow
       # initialize values of fields
       hash.keys.each do |field|
         if self.respond_to? field
-          self.send("#{field}=", hash[field])
+          self.instance_variable_set("@#{field}", hash[field])
         end
       end
 
@@ -153,10 +161,8 @@ module Mongolow
       self.run_hook :before_save
       document =  {}
 
-      # remove '@' from each instance variable name
-      # don't save internal fields ('_xxxx')
-      self.instance_variables.map{ |x| x.to_s[1..-1] }.each do |field|
-        document[field] = self.send(field) unless field[0] == '_'
+      self.class.public_fields.each do |field|
+        document[field] = self.send(field)
       end
 
       if self._id
@@ -209,7 +215,7 @@ module Mongolow
     def set(field, value)
       result = false
 
-      if self.respond_to?(field) and field[0] != '_'
+      if self.class.public_fields.include?(field)
         self.send("#{field}=", value)
 
         if self.validate
@@ -227,7 +233,7 @@ module Mongolow
     def update(params)
       params.keys.each do |field|
         if self.respond_to? field and field[0] != '_'
-          self.send("#{field}=", params[field])
+          self.instance_variable_set("@#{field}", params[field])
         end
       end
 
