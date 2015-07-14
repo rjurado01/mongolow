@@ -3,6 +3,8 @@ Dir["lib/*.rb"].each {|file| require_relative "../#{file}" }
 ENV['ENV'] = 'test'
 
 RSpec.configure do |config|
+  config.default_path = 'spec'
+
   config.expect_with :rspec do |expectations|
     expectations.syntax = :expect
   end
