@@ -6,7 +6,24 @@ Mongolow uses [mongo-ruby-driver](https://github.com/mongodb/mongo-ruby-driver) 
 
 ### Initialize
 
+#### Manually
+
     Mongolow::Driver.initialize('127.0.0.1', 27017, 'mongolow_test')
+    
+#### Config file
+
+You can use `config/mongolow.yml` to define environments configurations.  
+Mongolow uses `ENV['ENV']` for get environment.
+    
+    development:
+      host: '127.0.0.1'
+      port: 27017
+      database: 'mongolow_development'
+      
+    production:
+      host: '127.0.0.1'
+      port: 27017
+      database: 'mongolow_production'
 
 ### Define model
 
@@ -27,7 +44,27 @@ Mongolow uses the next private fields **DON'T OVERWRITE !!**:
 * _errors
 * _hooks
 
-Mongolow doesn't save or represent private fields. You can use as virtual fields.
+Mongolow doesn't save or represent private fields.
+
+#### Virtual fields
+
+You can define virtual fields that don't be persisted in database but it can be used in model functions and hooks.
+
+```ruby
+class Person
+  include Mongolow::Model
+
+  field :name
+  attr_read :age
+end
+
+person = Person.new({name: 'John', age: 15})
+person.age # => 15
+person.save
+
+Person.last.name # => 'John'
+Person.last.age  # => nil
+```
 
 ### Class Methods
 
