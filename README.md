@@ -158,6 +158,10 @@ class Post
 end
 
 p = Post.new({title: 'Title1', text: 'Example text 1.'})
+p._old_values
+# {}
+
+p.save
 p.title = 'Title2'
 p._old_values
 # {'title' => 'Title1', 'text' => 'Example text 1.'}

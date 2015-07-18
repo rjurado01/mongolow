@@ -11,6 +11,10 @@ describe Mongolow::Cursor do
     end
   end
 
+  before do
+    allow_any_instance_of(Person).to receive(:set_old_values).and_return(true)
+  end
+
   describe "Functionality" do
     context "when create new instance" do
       it "everything works fine" do
@@ -30,6 +34,10 @@ describe Mongolow::Cursor do
         expect(model.class).to eq(Person)
         expect(model.name).to eq('name1')
       end
+
+      it "call set_old_values" do
+        expect(@instance.first).to have_received(:set_old_values)
+      end
     end
 
     describe "all" do
@@ -40,6 +48,12 @@ describe Mongolow::Cursor do
         expect(models[0].name).to eq('name1')
         expect(models[1].class).to eq(Person)
         expect(models[1].name).to eq('name2')
+      end
+
+      it "call set_old_values" do
+        @instance.all.each do |model|
+          expect(model).to have_received(:set_old_values)
+        end
       end
     end
 

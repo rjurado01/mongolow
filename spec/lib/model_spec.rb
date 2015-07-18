@@ -23,16 +23,7 @@ describe Mongolow::Model do
         expect(instance).not_to eq(nil)
         expect(instance._id).to eq('123')
         expect(instance.name).to eq('name1')
-      end
-
-      it "initializes _old_values" do
-        class NewModel
-          include Mongolow::Model
-        end
-
-        allow_any_instance_of(NewModel).to receive(:set_old_values).and_return(true)
-        instance = NewModel.new
-        expect(instance).to have_received(:set_old_values)
+        expect(instance._old_values).to eq({})
       end
 
       it "accept attr_reader fields" do

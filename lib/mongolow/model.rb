@@ -150,8 +150,8 @@ module Mongolow
         end
       end
 
+      self._old_values = {}
       self.run_hook :after_initialize
-      set_old_values
     end
 
     ##

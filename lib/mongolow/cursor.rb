@@ -11,13 +11,17 @@ module Mongolow
 
     def first
       if doc = @mongo_cursor.first
-        @obj_class.new(doc)
+        instance = @obj_class.new(doc)
+        instance.send(:set_old_values)
+        instance
       end
     end
     
     def all
       @mongo_cursor.map do |doc|
-        @obj_class.new(doc)
+        instance = @obj_class.new(doc)
+        instance.send(:set_old_values)
+        instance
       end
     end
 
