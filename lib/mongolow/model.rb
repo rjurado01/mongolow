@@ -215,7 +215,7 @@ module Mongolow
     def set(field, value)
       result = false
 
-      if self.class.public_fields.include?(field)
+      if self.class.public_fields.include?(field.to_s)
         self.send("#{field}=", value)
 
         if self.validate

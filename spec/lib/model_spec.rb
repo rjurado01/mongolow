@@ -266,13 +266,26 @@ describe Mongolow::Model do
     end
 
     describe "set" do
-      it "updates field" do
-        id_1 = BSON::ObjectId.new
-        @client['my_model'].insert_one({_id: id_1, name: 'name1'})
-        instance = MyModel.find({_id: id_1}).first
-        instance.set('name', 'name2')
+      context "when pass field name as string" do
+        it "updates field" do
+          id_1 = BSON::ObjectId.new
+          @client['my_model'].insert_one({_id: id_1, name: 'name1'})
+          instance = MyModel.find({_id: id_1}).first
+          instance.set('name', 'name2')
 
-        expect(@client['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
+          expect(@client['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
+        end
+      end
+
+      context "when pass field name as symbol" do
+        it "updates field" do
+          id_1 = BSON::ObjectId.new
+          @client['my_model'].insert_one({_id: id_1, name: 'name1'})
+          instance = MyModel.find({_id: id_1}).first
+          instance.set(:name, 'name2')
+
+          expect(@client['my_model'].find({'_id' => id_1}).first['name']).to eq('name2')
+        end
       end
     end
 
