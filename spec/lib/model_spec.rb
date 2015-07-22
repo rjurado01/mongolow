@@ -123,6 +123,13 @@ describe Mongolow::Model do
         expect(MyModel.first({name: 'name2'})._id).to eq(id_2)
       end
     end
+
+    describe "create" do
+      it "initializes and creates new model" do
+        instance = MyModel.create(name: 'create_model')
+        expect(MyModel.first.name).to eq('create_model')
+      end
+    end
   end
 
   describe "Instance Methods" do

@@ -113,6 +113,15 @@ module Mongolow
           false
         end
       end
+
+      ##
+      # Initialize and save new model
+      #
+      def create(hash={})
+        model = self.new(hash)
+        model.save
+        model
+      end
     end
 
     ##
