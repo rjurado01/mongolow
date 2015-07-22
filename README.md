@@ -13,7 +13,7 @@ Mongolow uses [mongo-ruby-driver](https://github.com/mongodb/mongo-ruby-driver) 
 #### Config file
 
 You can use `config/mongolow.yml` to define environments configurations.  
-Mongolow uses `ENV['ENV']` for get environment.
+Mongolow uses `ENV['ENV']` to select environment.
     
     development:
       host: '127.0.0.1'
@@ -24,6 +24,15 @@ Mongolow uses `ENV['ENV']` for get environment.
       host: '127.0.0.1'
       port: 27017
       database: 'mongolow_production'
+
+
+Use default config file:
+
+    Mongolow.initialize
+
+Select other config file:
+
+    Mongolow::Driver.initialize_from_file('path/other_file.yml')
 
 ### Define model
 

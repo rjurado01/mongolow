@@ -10,6 +10,16 @@ module Mongolow
         @client = Mongo::Client.new("mongodb://#{ip}:#{port}/#{database_name}")
       end
 
+      def initialize_from_file(path)
+        if File.exist?(path)
+          config = YAML.load_file(path)[ENV['ENV']]
+
+          if config
+            self.initialize(config['host'], config['port'], config['database'])
+          end
+        end
+      end
+
       def client
         @client
       end

@@ -16,4 +16,11 @@ describe "Mongolow::Driver" do
       expect(client.database.collection_names).to eq([])
     end
   end
+
+  describe "initialize_from_file" do
+    it "loads config from yml file" do
+      client = Mongolow::Driver.initialize_from_file('spec/config/mongolow.yml')
+      expect(client.database.name).to eq('mongolow_test')
+    end
+  end
 end
