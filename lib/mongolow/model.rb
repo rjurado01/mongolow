@@ -304,6 +304,7 @@ module Mongolow
     # Validates model and returns true if model is valid
     #
     def validate
+      self._errors = {}
       self.run_hook :validate
       not self.errors?
     end
