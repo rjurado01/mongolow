@@ -5,6 +5,7 @@ require 'mongolow/exceptions'
 require 'mongolow/driver'
 require 'mongolow/cursor'
 require 'mongolow/changes'
+require 'mongolow/validations'
 require 'mongolow/model'
 
 module Mongolow

@@ -133,6 +133,7 @@ module Mongolow
       base.extend(ClassMethods)
       base.send :include, Hooks
       base.send :include, Changes
+      base.send :include, Validations
 
       base.define_hook :validate
       base.define_hook :after_initialize
@@ -159,7 +160,9 @@ module Mongolow
         end
       end
 
+      self._errors = {}
       self._old_values = {}
+
       self.run_hook :after_initialize
     end
 
