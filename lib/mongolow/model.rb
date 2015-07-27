@@ -79,7 +79,8 @@ module Mongolow
       # @param: query [hash]
       #
       def first(query={})
-        self.new(Driver.client[coll_name].find(query).first)
+        document = Driver.client[coll_name].find(query).first
+        self.new(document) if document
       end
 
       ##

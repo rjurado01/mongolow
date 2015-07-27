@@ -112,15 +112,23 @@ describe Mongolow::Model do
     end
 
     describe "first" do
-      it "returns first model" do
-        id_1 = BSON::ObjectId.new
-        id_2 = BSON::ObjectId.new
-        @client['my_model'].insert_one({_id: id_1, name: 'name1'})
-        @client['my_model'].insert_one({_id: id_2, name: 'name2'})
-        expect(MyModel.first._id).to eq(id_1)
-        expect(MyModel.first.class).to eq(MyModel)
-        expect(MyModel.first(name: 'name2')._id).to eq(id_2)
-        expect(MyModel.first({name: 'name2'})._id).to eq(id_2)
+      context "when there is some document" do
+        it "returns first model" do
+          id_1 = BSON::ObjectId.new
+          id_2 = BSON::ObjectId.new
+          @client['my_model'].insert_one({_id: id_1, name: 'name1'})
+          @client['my_model'].insert_one({_id: id_2, name: 'name2'})
+          expect(MyModel.first._id).to eq(id_1)
+          expect(MyModel.first.class).to eq(MyModel)
+          expect(MyModel.first(name: 'name2')._id).to eq(id_2)
+          expect(MyModel.first({name: 'name2'})._id).to eq(id_2)
+        end
+      end
+
+      context "when there is not any document" do
+        it "returns nil" do
+          expect(MyModel.first).to be_nil
+        end
       end
     end
 
