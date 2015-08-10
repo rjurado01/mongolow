@@ -309,8 +309,11 @@ describe Mongolow::Model do
         id_1 = BSON::ObjectId.new
         @client['my_model'].insert_one({_id: id_1, name: 'name1'})
         instance = MyModel.find({_id: id_1}).first
+        allow(instance).to receive('run_hook').and_return(true)
         instance.destroy
 
+        expect(instance).to have_received('run_hook').with(:before_destroy)
+        expect(instance).to have_received('run_hook').with(:after_destroy)
         expect(@client['my_model'].find().count).to eq(0)
       end
     end

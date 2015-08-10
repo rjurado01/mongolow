@@ -259,7 +259,7 @@ module Mongolow
     def destroy
       self.run_hook :before_destroy
       result = Driver.client[self.class.coll_name].find({'_id' => self._id}).delete_one
-      self.run_hook :after_save
+      self.run_hook :after_destroy
 
       result ? true : false
     end
