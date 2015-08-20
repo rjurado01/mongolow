@@ -43,5 +43,10 @@ module Mongolow
       @mongo_cursor.selector.merge!(selector)
       return self
     end
+
+    def sort(query)
+      @mongo_cursor = @mongo_cursor.sort(query)
+      return self
+    end
   end
 end

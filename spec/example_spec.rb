@@ -63,8 +63,7 @@ describe "Model inheritance example" do
     expect(@client['person'].find().count).to eq(0)
 
     # check validation
-    person1 = Person.new({name: 'p1'})
-    person1.save
+    person1 = Person.create({name: 'p1'})
     expect(@client['person'].find.count).to eq(0)
     expect(person1._errors).to eq({'email' => 'black'})
     expect(person1.errors?).to eq(true)
@@ -72,19 +71,23 @@ describe "Model inheritance example" do
     expect(person1.validate).to eq(true)
 
     # check template
-    person1 = Person.new({name: 'p1', age: '25', email: 'email1@email.com'})
-    person1.save
+    person1 = Person.create({name: 'p1', age: '25', email: 'email1@email.com'})
     expect(person1.template).to eq(
       {'id' => person1.id, 'name' => 'p1', 'age' => '25', 'email' => 'email1@email.com'})
 
     # check find
-    person1 = Person.new({name: 'p10', age: '40', email: 'email10@email.com'})
-    person2 = Person.new({name: 'p11', age: '40', email: 'email11@email.com'})
-    person1.save
-    person2.save
+    person1 = Person.create({name: 'p10', age: '40', email: 'email10@email.com'})
+    person2 = Person.create({name: 'p11', age: '40', email: 'email11@email.com'})
     cursor = Person.find({age: '40'})
     expect(cursor.count).to eq(2)
     expect(cursor.find({name: 'p10'}).count).to eq(1)
+
+    # check sort
+    Person.destroy_all
+    person1 = Person.create({email: 'p1@email.com', age: '20'})
+    person2 = Person.create({email: 'p2@email.com', age: '40'})
+    expect(Person.find.sort({age: 1}).first.email).to eq('p1@email.com')
+    expect(Person.find.sort({age: -1}).first.email).to eq('p2@email.com')
 
     # close connection
     # Mongolow::Driver.close

@@ -66,18 +66,30 @@ describe Mongolow::Cursor do
     describe "limit" do
       it "limited query documents" do
         cursor = @instance.mongo_cursor
-        allow(cursor).to receive(:limit).and_return(cursor)
+        allow(cursor).to receive(:limit).and_return("limited_cursor")
         expect(@instance.limit(1).class).to eq(Mongolow::Cursor)
         expect(cursor).to have_received(:limit)
+        expect(@instance.mongo_cursor).to eq("limited_cursor")
       end
     end
 
     describe "skip" do
       it "skip n documents" do
         cursor = @instance.mongo_cursor
-        allow(cursor).to receive(:skip).and_return(cursor)
+        allow(cursor).to receive(:skip).and_return("skiped_cursor")
         expect(@instance.skip(1).class).to eq(Mongolow::Cursor)
-        expect(cursor).to have_received(:skip)
+        expect(cursor).to have_received(:skip).with(1)
+        expect(@instance.mongo_cursor).to eq("skiped_cursor")
+      end
+    end
+
+    describe "sort" do
+      it "sort query" do
+        cursor = @instance.mongo_cursor
+        allow(cursor).to receive(:sort).and_return("sorted_cursor")
+        expect(@instance.sort(1).class).to eq(Mongolow::Cursor)
+        expect(cursor).to have_received(:sort).with(1)
+        expect(@instance.mongo_cursor).to eq("sorted_cursor")
       end
     end
 
