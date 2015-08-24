@@ -34,6 +34,12 @@ Select other config file:
 
     Mongolow::Driver.initialize_from_file('path/other_file.yml')
 
+#### Remove mongo log
+
+Mongolow creates log file in `log/` directory. To remove it add:
+
+    Mongo::Logger.logger = Logger.new('/dev/null')
+
 ### Define model
 
 ```ruby
@@ -85,6 +91,16 @@ Person.last.age  # => nil
 * destroy_all
 * destroy_by_id(id)
 
+### Cursor methods
+
+* first
+* all
+* count
+* limit(n)
+* skyp(n)
+* find(query)
+* sort(query)
+
 ### Instance Methods
 
 * save
@@ -116,7 +132,6 @@ class Person
   field :name
 
   validate do
-    self._errors = {}
     self._errors['name'] = 'blank' unless self.name
   end
 end
@@ -125,6 +140,29 @@ end
 Mongolow call validate method before save any model.  
 If validate method returns false, Mongolow don't save the model.
 
+### Methods
+
+You can use mongolow validations methods in validate block:
+
+* `presence_of(field_name, options={}) # message => blank`
+* `inclusion_of(field_name, values, options={}) # message => inclusion`
+* `uniquenes_of(field_name, options={}) # message => taken`
+* `match_of(field_name, value, options={}) # message => match`
+
+Example:
+
+```ruby
+class Car
+  include Mongolow::Model
+
+  field :type
+
+  validate do
+    presence_of :type, {message: 'presence'}  # add presence error
+    inclusion_of :type, [:type1, :type2]  # add default inclusion error
+  end
+end
+```
 ## Relationships
 
 Mongolow doesn't support relationships management.  
