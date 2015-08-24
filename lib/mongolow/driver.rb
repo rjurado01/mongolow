@@ -6,7 +6,11 @@ module Mongolow
   class Driver
     class << self
       def initialize(ip, port, database_name)
-        Mongo::Logger.logger = Logger.new('log/mongo_logfile.log')
+        if File.directory?('log')
+          Mongo::Logger.logger = Logger.new('log/mongo_logfile.log')
+        end
+
+        Mongo::Logger.logger.level = ::Logger::INFO
         @client = Mongo::Client.new("mongodb://#{ip}:#{port}/#{database_name}")
       end
 

@@ -34,11 +34,15 @@ Select other config file:
 
     Mongolow::Driver.initialize_from_file('path/other_file.yml')
 
-#### Remove mongo log
+#### Mongo log
 
-Mongolow creates log file in `log/` directory. To remove it add:
+Mongolow creates `mongo_logfile.log` file in `log/` directory if this exists. Otherwise Mongolow shows logs by console.
+
+To edit/remove Mongo log you can add this after initialize Mongolow:
 
     Mongo::Logger.logger = Logger.new('/dev/null')
+
+By default Mongo log level is INFO.
 
 ### Define model
 
