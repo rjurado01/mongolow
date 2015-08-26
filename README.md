@@ -119,6 +119,7 @@ Person.last.age  # => nil
 * template
 * changed
 * changed?(field_name)
+* set_attributes(hash)
 
 ### Example
 

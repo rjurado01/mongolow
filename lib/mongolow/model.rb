@@ -155,16 +155,24 @@ module Mongolow
       end
 
       # initialize values of fields
+      self.set_attributes(hash)
+
+      # initialize internal variables
+      self._errors = {}
+      self._old_values = {}
+
+      self.run_hook :after_initialize
+    end
+
+    ##
+    # Set attributes values from hash
+    #
+    def set_attributes(hash={})
       hash.keys.each do |field|
         if self.respond_to? field
           self.instance_variable_set("@#{field}", hash[field])
         end
       end
-
-      self._errors = {}
-      self._old_values = {}
-
-      self.run_hook :after_initialize
     end
 
     ##
