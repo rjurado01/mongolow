@@ -2,18 +2,18 @@ PATH
   remote: .
   specs:
     mongolow (0.0.1)
-      hooks
-      mongo (~> 2.0.4)
+      hooks (~> 0.4.1)
+      mongo (~> 2.2.0)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    bson (3.0.4)
+    bson (4.0.0)
     diff-lcs (1.2.5)
-    hooks (0.4.0)
-      uber (~> 0.0.4)
-    mongo (2.0.4)
-      bson (~> 3.0)
+    hooks (0.4.1)
+      uber (~> 0.0.14)
+    mongo (2.2.1)
+      bson (~> 4.0)
     rspec (3.2.0)
       rspec-core (~> 3.2.0)
       rspec-expectations (~> 3.2.0)
@@ -27,7 +27,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.2.0)
     rspec-support (3.2.1)
-    uber (0.0.13)
+    uber (0.0.15)
 
 PLATFORMS
   ruby
@@ -35,3 +35,6 @@ PLATFORMS
 DEPENDENCIES
   mongolow!
   rspec
+
+BUNDLED WITH
+   1.11.2
