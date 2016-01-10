@@ -106,5 +106,15 @@ describe Mongolow::Cursor do
         expect(cursor.mongo_cursor.selector).to eq({one: 1, two: 2})
       end
     end
+
+    describe "destroy_all" do
+      it "destroy cursor documents" do
+        cursor = @instance.mongo_cursor
+        count = 0
+        allow_any_instance_of(Person).to receive(:destroy) { count += 1 }
+        @instance.destroy_all
+        expect(count).to eq(2)
+      end
+    end
   end
 end

@@ -89,6 +89,12 @@ describe "Model inheritance example" do
     expect(Person.find.sort({age: 1}).first.email).to eq('p1@email.com')
     expect(Person.find.sort({age: -1}).first.email).to eq('p2@email.com')
 
+    # check cursor destroy_all
+    expect {
+      Person.find({age: '20'}).destroy_all
+    }.to change(Person, :count).by(-1)
+    expect(Person.first.age).to eq('40')
+
     # close connection
     # Mongolow::Driver.close
   end

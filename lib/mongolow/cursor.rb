@@ -16,7 +16,7 @@ module Mongolow
         instance
       end
     end
-    
+
     def all
       @mongo_cursor.map do |doc|
         instance = @obj_class.new(doc)
@@ -27,6 +27,10 @@ module Mongolow
 
     def count
       @mongo_cursor.count
+    end
+
+    def destroy_all
+      self.all.each { |x| x.destroy }
     end
 
     def limit(n)

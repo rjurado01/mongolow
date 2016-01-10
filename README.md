@@ -101,9 +101,10 @@ Person.last.age  # => nil
 * all
 * count
 * limit(n)
-* skyp(n)
+* skip(n)
 * find(query)
 * sort(query)
+* destroy_all
 
 ### Instance Methods
 
