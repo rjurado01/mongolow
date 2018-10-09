@@ -2,55 +2,79 @@ module Mongolow
   class Cursor
     include Enumerable
 
-    attr_accessor :mongo_cursor
+    attr_reader :obj_class, :filter, :options
 
-    def initialize(obj_class, mongo_cursor)
+    def initialize(obj_class, filter=nil, options={})
       @obj_class = obj_class
-      @mongo_cursor = mongo_cursor
+      @filter = symbolize_keys(filter)
+      @options = symbolize_keys(options)
     end
 
     def first
-      if doc = @mongo_cursor.first
-        instance = @obj_class.new(doc)
-        instance.send(:set_old_values)
-        instance
-      end
+      return unless (doc = view.first)
+
+      instance = @obj_class.new(doc)
+      instance.send(:set_old_values)
+      instance
     end
 
     def all
-      @mongo_cursor.map do |doc|
+      view.map do |doc|
         instance = @obj_class.new(doc)
         instance.send(:set_old_values)
         instance
       end
     end
 
-    def count
-      @mongo_cursor.count
-    end
-
     def destroy_all
-      self.all.each { |x| x.destroy }
+      all.each(&:destroy)
     end
 
-    def limit(n)
-      @mongo_cursor = @mongo_cursor.limit(n)
-      return self
+    def limit(size)
+      @options[:limit] = size
+      self
     end
 
-    def skip(n)
-      @mongo_cursor = @mongo_cursor.skip(n)
-      return self
+    def skip(size)
+      @options[:skip] = size
+      self
     end
 
-    def find(selector)
-      @mongo_cursor.selector.merge!(selector)
-      return self
+    def find(filter=nil, options={})
+      @filter.merge! symbolize_keys(filter)
+      @options.merge! symbolize_keys(options)
+      self
     end
 
-    def sort(query)
-      @mongo_cursor = @mongo_cursor.sort(query)
-      return self
+    def sort(params)
+      @options[:sort] = symbolize_keys(params)
+      self
+    end
+
+    private
+
+    def view
+      Driver.client[@obj_class.coll_name].find(@filter, @options)
+    end
+
+    def method_missing(method, *args, &block)
+      super unless view.respond_to?(method)
+
+      view.public_send(method, *args, &block)
+    end
+
+    def respond_to_missing?
+      true
+    end
+
+    def symbolize_keys(hash)
+      return {} unless hash
+
+      hash.keys.each do |key|
+        hash[(key.to_sym rescue key) || key] = hash.delete(key)
+      end
+
+      hash
     end
   end
 end

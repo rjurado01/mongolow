@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Mongolow
   module Model
     module ClassMethods
@@ -16,7 +14,7 @@ module Mongolow
       # Internal fields begin with '_'
       #
       def public_fields
-        fields.select{ |field_name| field_name[0] != '_' }
+        fields.reject { |field_name| field_name[0] == '_' }
       end
 
       ##
@@ -28,16 +26,14 @@ module Mongolow
       # @param: name [string/symbol] field name
       #
       def field(name)
-        unless @fields.include? name
-          @fields.push name.to_s
-        end
+        @fields.push name.to_s unless @fields.include? name
       end
 
       ##
       # Returns collection name for model used in Mongodb
       #
       def coll_name
-        self.name.split('::').last.split(/(?=[A-Z])/).map{|x| x.downcase}.join('_')
+        name.split('::').last.split(/(?=[A-Z])/).map(&:downcase).join('_')
       end
 
       ##
@@ -45,8 +41,8 @@ module Mongolow
       #
       # @param: query [hash]
       #
-      def find(query={})
-        Mongolow::Cursor.new(self, Driver.client[coll_name].find(query))
+      def find(filter={}, options={})
+        Mongolow::Cursor.new(self, filter, options)
       end
 
       ##
@@ -56,14 +52,10 @@ module Mongolow
       #
       def find_by_id(id)
         unless id.class == BSON::ObjectId
-          if BSON::ObjectId.legal? id
-            id = BSON::ObjectId.from_string(id)
-          else
-            nil
-          end
+          id = BSON::ObjectId.legal?(id) ? BSON::ObjectId.from_string(id) : nil
         end
 
-        find('_id' => id).first
+        Driver.client[self.class.coll_name].find('_id' => id).first
       end
 
       ##
@@ -80,7 +72,7 @@ module Mongolow
       #
       def first(query={})
         document = Driver.client[coll_name].find(query).first
-        self.new(document) if document
+        new(document) if document
       end
 
       ##
@@ -97,15 +89,7 @@ module Mongolow
       # @param: id [string/BSON::ObjectId]
       #
       def destroy_by_id(id)
-        unless id.class == BSON::ObjectId
-          if BSON::ObjectId.legal? id
-            id = BSON::ObjectId.from_string(id)
-          else
-            return false
-          end
-        end
-
-        if model = find('_id' => id).first
+        if (model = find_by_id(id))
           model.run_hook :before_destroy
           model.destroy
           model.run_hook :after_destroy
@@ -119,7 +103,7 @@ module Mongolow
       # Initialize and save new model
       #
       def create(hash={})
-        model = self.new(hash)
+        model = new(hash)
         model.save
         model
       end
@@ -129,7 +113,7 @@ module Mongolow
     # Adds class methods and hooks
     #
     def self.included(base)
-      base.instance_variable_set(:@fields, ['_id', '_errors', '_old_values'])
+      base.instance_variable_set(:@fields, %w[_id _errors _old_values])
 
       base.extend(ClassMethods)
       base.send :include, Hooks
@@ -151,27 +135,25 @@ module Mongolow
     #
     def initialize(hash={})
       self.class.fields.each do |field|
-        self.singleton_class.send(:attr_accessor, field)
+        singleton_class.send(:attr_accessor, field)
       end
 
       # initialize values of fields
-      self.set_attributes(hash)
+      assign_attributes(hash)
 
       # initialize internal variables
       self._errors = {}
       self._old_values = {}
 
-      self.run_hook :after_initialize
+      run_hook :after_initialize
     end
 
     ##
     # Set attributes values from hash
     #
-    def set_attributes(hash={})
+    def assign_attributes(hash={})
       hash.keys.each do |field|
-        if self.respond_to? field
-          self.instance_variable_set("@#{field}", hash[field])
-        end
+        instance_variable_set("@#{field}", hash[field]) if respond_to? field
       end
     end
 
@@ -179,23 +161,22 @@ module Mongolow
     # Writes model in database
     #
     def save_without_validation
-      self.run_hook :before_save
-      document =  {}
+      run_hook :before_save
+      document = {}
 
       self.class.public_fields.each do |field|
-        document[field] = self.send(field)
+        document[field] = public_send(field)
       end
 
-      if self._id
-        result = Driver.client[self.class.coll_name]
-          .find({'_id' => self._id}).update_one(document, {:upsert => true})
+      if _id
+        result = find_by_id(_id).update_one(document, upsert: true)
       else
         document['_id'] = BSON::ObjectId.new
         Driver.client[self.class.coll_name].insert_one(document)
         self._id = document['_id']
       end
 
-      self.run_hook :after_save
+      run_hook :after_save
       set_old_values
 
       result ? true : false
@@ -205,13 +186,7 @@ module Mongolow
     # Validates and writes model in database
     #
     def save
-      result = false
-
-      if self.validate
-        result = self.save_without_validation
-      end
-
-      result ? true : false
+      validate ? save_without_validation : false
     end
 
     ##
@@ -219,31 +194,21 @@ module Mongolow
     # Throws an exception when the document is invalid
     #
     def save!
-      result = false
+      raise Exceptions::Validations.new(_errors) unless validate
 
-      if self.validate
-        result = self.save_without_validation
-      else
-        raise Exceptions::Validations.new(self._errors)
-      end
-
-      result ? true : false
+      validate ? save_without_validation : false
     end
 
     ##
     # Updates field of document in database (atomic operation)
     #
     def set(field, value)
-      result = false
+      return false unless field && self.class.public_fields.include?(field.to_s)
 
-      if self.class.public_fields.include?(field.to_s)
-        self.send("#{field}=", value)
+      send("#{field}=", value)
 
-        if self.validate
-          result = Driver.client[self.class.coll_name].find({'_id' => self._id})
-            .update_one({'$set' => {field => value}})
-        end
-      end
+      result = Driver.client[self.class.coll_name].find('_id' => _id)
+                     .update_one('$set' => {field => value})
 
       result ? true : false
     end
@@ -253,21 +218,19 @@ module Mongolow
     #
     def update(params)
       params.keys.each do |field|
-        if self.respond_to? field and field[0] != '_'
-          self.instance_variable_set("@#{field}", params[field])
-        end
+        instance_variable_set("@#{field}", params[field]) if respond_to?(field) && field[0] != '_'
       end
 
-      self.save
+      save
     end
 
     ##
     # Removes document from database
     #
     def destroy
-      self.run_hook :before_destroy
-      result = Driver.client[self.class.coll_name].find({'_id' => self._id}).delete_one
-      self.run_hook :after_destroy
+      run_hook :before_destroy
+      result = Driver.client[self.class.coll_name].find('_id' => _id).delete_one
+      run_hook :after_destroy
 
       result ? true : false
     end

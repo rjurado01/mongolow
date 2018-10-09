@@ -33,8 +33,7 @@ module Mongolow
       end
 
       def close
-        # waiting mongo add this to stable version
-        # @client.close
+        @client.close
       end
     end
   end
